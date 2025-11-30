@@ -55,6 +55,8 @@ export default async function Designs() {
                 title={design.title}
                 imageUrl={design.imageUrl}
                 price={design.price}
+                type= "CATALOG"
+                designerAvatar="/avatars/default.png"
                 designerName={design.designer?.name || "Unknown Designer"} // Handle null name
               />
             ))}
