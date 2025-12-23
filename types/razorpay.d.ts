@@ -1,4 +1,12 @@
-interface RazorpayOptions {
+export {};
+
+declare global {
+  interface Window {
+    Razorpay: new (options: RazorpayOptions) => RazorpayInstance;
+  }
+}
+
+export interface RazorpayOptions {
   key: string;
   amount: number;
   currency: string;
@@ -6,22 +14,42 @@ interface RazorpayOptions {
   description?: string;
   image?: string;
   order_id: string;
-  handler: (response: unknown) => void;
+  handler?: (response: RazorpaySuccessResponse) => void;
   prefill?: {
     name?: string;
     email?: string;
     contact?: string;
   };
-  notes?: unknown;
+  notes?: Record<string, string>;
   theme?: {
     color: string;
   };
+  modal?: {
+    ondismiss?: () => void;
+  };
 }
 
-interface RazorpayInstance {
+export interface RazorpaySuccessResponse {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+export interface RazorpayErrorResponse {
+  error: {
+    code: string;
+    description: string;
+    source: string;
+    step: string;
+    reason: string;
+    metadata: {
+      order_id: string;
+      payment_id: string;
+    };
+  };
+}
+
+export interface RazorpayInstance {
   open: () => void;
-}
-
-interface Window {
-  Razorpay: new (options: RazorpayOptions) => RazorpayInstance;
+  on: (event: string, handler: (response: RazorpayErrorResponse) => void) => void;
 }

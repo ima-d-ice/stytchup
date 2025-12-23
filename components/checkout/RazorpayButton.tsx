@@ -3,17 +3,22 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
-
-declare global {
-  interface Window {
-    Razorpay: new (options: any) => any;
-  }
-}
+import { 
+  RazorpayOptions, 
+  RazorpaySuccessResponse, 
+  RazorpayErrorResponse 
+} from '@/types/razorpay'; 
+// ^ Make sure this path matches where you saved the file. 
+// If it's in src/types, '@/types/razorpay' is correct.
+// Import types if your TS config requires explicit imports, 
+// otherwise they should be available globally if configured correctly.
+// If you see red lines, uncomment the line below:
+// import { RazorpayOptions, RazorpaySuccessResponse, RazorpayErrorResponse } from '@/types/razorpay';
 
 interface RazorpayButtonProps {
   amount: number;
   sourceId: string;
-  type: 'CATALOG' | 'CHAT_OFFER'; // 👈 Updated Type
+  type: 'CATALOG' | 'CHAT_OFFER';
   buttonText?: string;
   onSuccess?: () => void;
 }
@@ -30,11 +35,19 @@ export default function RazorpayButton({
   const router = useRouter();
 
   const handlePayment = async () => {
+    // 1. Validate Key (Fixes: Type 'undefined' is not assignable to type 'string')
+    const key = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    if (!key) {
+      alert("Razorpay Key is missing");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // 1. Create Order
-      const res = await fetch('http://localhost:4000/payments/create-order', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      
+      const res = await fetch(`${apiUrl}/payments/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -48,21 +61,20 @@ export default function RazorpayButton({
         return;
       }
 
-      const orderData = await res.json(); // Contains razorpay order_id AND dbOrderId
+      const orderData = await res.json();
 
-      // 2. Open Popup
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      // 2. Define Options with Strict Types
+      const options: RazorpayOptions = {
+        key: key, // Verified string
         amount: orderData.amount,
         currency: orderData.currency,
         name: "StychUp",
         description: "Secure Payment",
-        order_id: orderData.id, // Razorpay ID
+        order_id: orderData.id,
         
-        handler: async function (response: any) {
+        handler: async function (response: RazorpaySuccessResponse) {
           try {
-            // 3. Verify
-            const verifyRes = await fetch('http://localhost:4000/payments/verify', {
+            const verifyRes = await fetch(`${apiUrl}/payments/verify`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               credentials: 'include',
@@ -70,7 +82,7 @@ export default function RazorpayButton({
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                dbOrderId: orderData.dbOrderId // 👈 Sending the REAL Order ID
+                dbOrderId: orderData.dbOrderId
               }),
             });
 
@@ -89,13 +101,16 @@ export default function RazorpayButton({
         theme: { color: "#FFC629" },
       };
 
+      // 3. Initialize Razorpay
       const paymentObject = new window.Razorpay(options);
-      paymentObject.open();
       
-      paymentObject.on('payment.failed', function () {
+      // 4. Handle Failures (Fixes: Property 'on' does not exist)
+      paymentObject.on('payment.failed', function (response: RazorpayErrorResponse) {
         setLoading(false);
-        alert("Payment Failed");
+        alert(`Payment Failed: ${response.error.description}`);
       });
+
+      paymentObject.open();
 
     } catch (err) {
       console.error(err);
@@ -105,7 +120,11 @@ export default function RazorpayButton({
 
   return (
     <>
-      <Script id="razorpay-js" src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+      <Script 
+        id="razorpay-js" 
+        src="https://checkout.razorpay.com/v1/checkout.js" 
+        strategy="lazyOnload" 
+      />
       <button
         onClick={handlePayment}
         disabled={loading}
