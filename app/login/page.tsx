@@ -3,6 +3,7 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -33,6 +34,7 @@ export default function LoginPage() {
   };
 
   return (
+    <Suspense fallback={<div>Loading...</div>}>
     <div className="flex h-screen items-center justify-center bg-[#FAFAFA]">
       <div className="w-full max-w-md p-8 bg-white rounded-3xl shadow-xl border border-gray-100">
         <h2 className="text-3xl font-black mb-8 text-center text-gray-900">Login</h2>
@@ -95,5 +97,6 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+    </Suspense>
   );
 }
