@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from "next-auth/react";
 import AvatarCard from '../../components/user-settings/Avatarcard';
 import ProfileForm from '../../components/user-settings/Profileform';
 
 export default function AccountSettings() {
+  const { data: session } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -26,10 +28,14 @@ export default function AccountSettings() {
   // 1. Fetch Data on Mount
   useEffect(() => {
     const fetchSettings = async () => {
+      if (!session?.accessToken) return;
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/profile/settings`, {
           credentials: 'include',
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.accessToken}`
+          }
         });
         
         if (res.ok) {
@@ -53,7 +59,7 @@ export default function AccountSettings() {
         console.error("Failed to load settings", err);
       } finally {
         setLoading(false);
-      }
+      session}
     };
 
     fetchSettings();
@@ -80,6 +86,7 @@ export default function AccountSettings() {
         credentials: 'include', // Important for NextAuth cookies
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.accessToken}`
         },
         // We send the entire formData, including the large Base64 avatarUrl string
         body: JSON.stringify(formData),

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSession } from "next-auth/react";
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -18,18 +19,26 @@ interface Order {
 }
 
 export default function MyOrdersPage() {
+  const { data: session } = useSession();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/orders/my-orders`, { credentials: 'include' })
+    if (!session?.accessToken) return;
+    
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/orders/my-orders`, { 
+      credentials: 'include',
+      headers: {
+        'Authorization': `Bearer ${session.accessToken}`
+      }
+    })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) setOrders(data);
       })
       .catch(err => console.error("Failed to load orders:", err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [session]);
 
   const handleConfirmDelivery = async (orderId: string) => {
     if(!confirm("Please confirm you have received the physical package.")) return;
@@ -37,7 +46,10 @@ export default function MyOrdersPage() {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/orders/complete`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.accessToken}`
+        },
         credentials: 'include',
         body: JSON.stringify({ orderId }),
       });

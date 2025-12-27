@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSession } from "next-auth/react";
 import Link from 'next/link';
 import Image from 'next/image';
 import ShipModal from '@/components/dashboard/ShipModal'; // Import the modal we just made
@@ -35,15 +36,20 @@ interface Order {
 }
 
 export default function DesignerDashboard() {
+  const { data: session } = useSession();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrderForShipping, setSelectedOrderForShipping] = useState<string | null>(null);
 
   // 1. Fetch Orders
   const fetchOrders = async () => {
+    if (!session?.accessToken) return;
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/orders/designer-orders`, { 
-        credentials: 'include' 
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${session.accessToken}`
+        }
       });
       if (res.ok) {
         const data = await res.json();
@@ -54,7 +60,7 @@ export default function DesignerDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  };session
 
   useEffect(() => {
     fetchOrders();

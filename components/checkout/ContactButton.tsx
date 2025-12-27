@@ -2,8 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useSession } from "next-auth/react";
 
 export default function ContactButton({ designerId, designerName }: { designerId: string; designerName?: string }) {
+  const { data: session } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -13,7 +15,10 @@ export default function ContactButton({ designerId, designerName }: { designerId
       // Create or Get Conversation
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/inbox/create`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.accessToken}`
+        },
         credentials: 'include',
         body: JSON.stringify({ targetUserId: designerId }),
       });

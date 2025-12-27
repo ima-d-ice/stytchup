@@ -34,7 +34,10 @@ export default function AddDesignPage() {
       // 🚀 Send the Data to your Express Backend
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/designs/add`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.accessToken}`
+        },
         body: JSON.stringify({
           title,
           price: Number(price),

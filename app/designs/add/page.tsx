@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from "next-auth/react";
 import { UploadButton } from "@/utils/uploadthing"; 
 
 
 export default function AddDesignPage() {
+  const { data: session } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   
@@ -32,7 +34,10 @@ export default function AddDesignPage() {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/designs/add`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.accessToken}`
+        },
         credentials: 'include',
         body: JSON.stringify({ ...form, price: priceInPaise }),
       });

@@ -96,7 +96,10 @@ export default function UserMenu() {
                 try {
                   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/auth/change-role`, {
                       method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
+                      headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session?.accessToken}`
+                      },
                       body: JSON.stringify({ role: targetRole }), 
                       credentials: 'include',
                   });

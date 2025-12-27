@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSession } from "next-auth/react";
 
 interface ShipModalProps {
   orderId: string;
@@ -9,6 +10,7 @@ interface ShipModalProps {
 }
 
 export default function ShipModal({ orderId, onClose, onSuccess }: ShipModalProps) {
+  const { data: session } = useSession();
   const [carrier, setCarrier] = useState('');
   const [tracking, setTracking] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,7 +21,10 @@ export default function ShipModal({ orderId, onClose, onSuccess }: ShipModalProp
 
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/orders/ship`, {
-        method: 'POST',
+        method: 'PO
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.accessToken}`
+       
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({

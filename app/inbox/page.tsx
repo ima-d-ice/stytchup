@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSession } from "next-auth/react";
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -13,13 +14,20 @@ interface Conversation {
 }
 
 export default function InboxList() {
+  const { data: session } = useSession();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [myId, setMyId] = useState<string>(""); // We'll infer this or fetch it
 
   useEffect(() => {
+    if (!session?.accessToken) return;
     // 1. Fetch Conversations
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/inbox/list`, { credentials: 'include' })
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/inbox/list`, { 
+      credentials: 'include',
+      headers: {
+        'Authorization': `Bearer ${session.accessToken}`
+      }
+    })
       .then(res => res.json())
       .then(data => {
         setConversations(data);
@@ -28,7 +36,7 @@ export default function InboxList() {
       })
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [session]);
 
   if (loading) return <div className="p-10 text-center">Loading Inbox...</div>;
 

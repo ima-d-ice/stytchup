@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useSession } from "next-auth/react";
 import { io, Socket } from 'socket.io-client';
 import RazorpayButton from '@/components/checkout/RazorpayButton';
 
@@ -18,6 +19,7 @@ interface Message {
 }
 
 export default function ChatPage() {
+  const { data: session } = useSession();
   const params = useParams(); 
   const conversationId = Array.isArray(params?.id) ? params.id[0] : params?.id;
   const router = useRouter();
@@ -31,31 +33,51 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // ... (useEffect for Fetching Profile & Socket connection remains the same) ...
-  useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/profile/settings`, { credentials: 'include' })
+  usif (!session?.accessToken) return;
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/profile/settings`, { 
+      credentials: 'include',
+      headers: { 'Authorization': `Bearer ${session.accessToken}` }
+    })
         .then(res => res.json())
         .then(data => setMyId(data.id))
         .catch(() => router.push('/login'));
 
     if (!conversationId) return;
-    const newSocket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000', { withCredentials: true });
+    
+    const newSocket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000', { 
+      withCredentials: true,
+      extraHeaders: {
+        Authorization: `Bearer ${session.accessToken}`
+      }
+    });
     setSocket(newSocket);
     newSocket.emit('join_chat', conversationId);
     newSocket.on('new_message', (msg: Message) => {
       setMessages((prev) => [...prev, msg]);
       setTimeout(scrollToBottom, 100);
     });
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/inbox/${conversationId}/messages`, { credentials: 'include' })
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/inbox/${conversationId}/messages`, { 
+      credentials: 'include',
+      headers: { 'Authorization': `Bearer ${session.accessToken}` }
+    })
       .then(res => res.json())
-      .then(data => { setMessages(data); setTimeout(scrollToBottom, 100); });
+      .then(data 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.accessToken}`
+     (scrollToBottom, 100); });
     return () => { newSocket.close(); };
+  }, [conversationId, router, session.close(); };
   }, [conversationId, router]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSendMessage = async (e: FormEvent) => {
+  const handleSen
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.accessToken}`
+      {
     e.preventDefault();
     if (!inputText.trim()) return;
     await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/inbox/message`, {
