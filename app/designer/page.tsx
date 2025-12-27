@@ -20,7 +20,7 @@ interface Designer {
 async function getDesigners(): Promise<Designer[]> {
   try {
     // Assuming endpoint exists to fetch users with role DESIGNER
-    const res = await fetch("http://localhost:4000/designers/", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/designers/`, {
       cache: "no-store",
     });
 

@@ -94,7 +94,7 @@ export default function UserMenu() {
                 const targetRole = userRole === 'CUSTOMER' ? 'designer' : 'customer';
                 
                 try {
-                  const res = await fetch('http://localhost:4000/auth/change-role', {
+                  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/auth/change-role`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ role: targetRole }), 

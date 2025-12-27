@@ -30,7 +30,7 @@ export default function AddDesignPage() {
     const priceInPaise = Math.round(parseFloat(form.price) * 100);
 
     try {
-      const res = await fetch('http://localhost:4000/designs/add', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/designs/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

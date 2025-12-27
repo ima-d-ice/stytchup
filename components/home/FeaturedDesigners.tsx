@@ -15,7 +15,7 @@ interface Designer {
 
 async function getDesigners(): Promise<Designer[]> {
   try {
-    const res = await fetch("http://localhost:4000/designers/", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/designers/`, {
       cache: "no-store",
     });
 

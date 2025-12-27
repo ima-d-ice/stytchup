@@ -24,7 +24,7 @@ interface Design {
 // --- Fetch Logic ---
 async function getDesign(id: string): Promise<Design | null> {
   try {
-    const res = await fetch(`http://localhost:4000/designs/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/designs/${id}`, {
       cache: 'no-store',
     });
 

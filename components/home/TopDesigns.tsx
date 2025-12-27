@@ -15,7 +15,7 @@ interface Design {
 
 async function getTopDesigns(): Promise<Design[]> {
   try {
-    const res = await fetch("http://localhost:4000/designs", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/designs`, {
       cache: "no-store", // Ensure fresh data
     });
 

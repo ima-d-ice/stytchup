@@ -42,7 +42,7 @@ export default function DesignerDashboard() {
   // 1. Fetch Orders
   const fetchOrders = async () => {
     try {
-      const res = await fetch('http://localhost:4000/orders/designer-orders', { 
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/orders/designer-orders`, { 
         credentials: 'include' 
       });
       if (res.ok) {

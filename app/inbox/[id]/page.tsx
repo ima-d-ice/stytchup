@@ -32,20 +32,20 @@ export default function ChatPage() {
 
   // ... (useEffect for Fetching Profile & Socket connection remains the same) ...
   useEffect(() => {
-    fetch('http://localhost:4000/profile/settings', { credentials: 'include' })
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/profile/settings`, { credentials: 'include' })
         .then(res => res.json())
         .then(data => setMyId(data.id))
         .catch(() => router.push('/login'));
 
     if (!conversationId) return;
-    const newSocket = io('http://localhost:4000', { withCredentials: true });
+    const newSocket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000', { withCredentials: true });
     setSocket(newSocket);
     newSocket.emit('join_chat', conversationId);
     newSocket.on('new_message', (msg: Message) => {
       setMessages((prev) => [...prev, msg]);
       setTimeout(scrollToBottom, 100);
     });
-    fetch(`http://localhost:4000/inbox/${conversationId}/messages`, { credentials: 'include' })
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/inbox/${conversationId}/messages`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => { setMessages(data); setTimeout(scrollToBottom, 100); });
     return () => { newSocket.close(); };
@@ -58,7 +58,7 @@ export default function ChatPage() {
   const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
-    await fetch('http://localhost:4000/inbox/message', {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/inbox/message`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -70,7 +70,7 @@ export default function ChatPage() {
   const handleSendOffer = async () => {
     if (!offerDetails.price || !offerDetails.title) return;
     const priceInPaise = parseFloat(offerDetails.price) * 100;
-    await fetch('http://localhost:4000/inbox/message', {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/inbox/message`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

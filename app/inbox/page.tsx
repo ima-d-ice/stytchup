@@ -19,7 +19,7 @@ export default function InboxList() {
 
   useEffect(() => {
     // 1. Fetch Conversations
-    fetch('http://localhost:4000/inbox/list', { credentials: 'include' })
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/inbox/list`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         setConversations(data);

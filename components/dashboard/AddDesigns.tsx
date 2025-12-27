@@ -32,7 +32,7 @@ export default function AddDesignPage() {
 
     try {
       // 🚀 Send the Data to your Express Backend
-      const res = await fetch("http://localhost:4000/designs/add", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/designs/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

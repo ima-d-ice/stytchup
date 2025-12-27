@@ -15,7 +15,7 @@ export default function RegisterPage() {
 
     try {
       // 1. Send data to Express Backend
-      const res = await fetch("http://localhost:4000/auth/register", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

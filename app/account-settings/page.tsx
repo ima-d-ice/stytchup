@@ -27,7 +27,7 @@ export default function AccountSettings() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch('http://localhost:4000/profile/settings', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/profile/settings`, {
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' }
         });
@@ -75,7 +75,7 @@ export default function AccountSettings() {
     setSaving(true);
 
     try {
-      const res = await fetch('http://localhost:4000/profile/update', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/profile/update`, {
         method: 'PUT',
         credentials: 'include', // Important for NextAuth cookies
         headers: {
