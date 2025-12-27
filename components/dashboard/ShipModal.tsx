@@ -21,11 +21,11 @@ export default function ShipModal({ orderId, onClose, onSuccess }: ShipModalProp
 
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/orders/ship`, {
-        method: 'PO
+        method: 'POST',
+        headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.accessToken}`
-       
-        headers: { 'Content-Type': 'application/json' },
+        },
         credentials: 'include',
         body: JSON.stringify({
           orderId,

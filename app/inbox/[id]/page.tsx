@@ -33,7 +33,8 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // ... (useEffect for Fetching Profile & Socket connection remains the same) ...
-  usif (!session?.accessToken) return;
+  useEffect(() => {
+    if (!session?.accessToken) return;
 
     fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/profile/settings`, { 
       credentials: 'include',
@@ -62,27 +63,27 @@ export default function ChatPage() {
       headers: { 'Authorization': `Bearer ${session.accessToken}` }
     })
       .then(res => res.json())
-      .then(data 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session?.accessToken}`
-     (scrollToBottom, 100); });
+      .then(data => {
+        setMessages(data);
+        setTimeout(scrollToBottom, 100);
+      });
+
     return () => { newSocket.close(); };
-  }, [conversationId, router, session.close(); };
-  }, [conversationId, router]);
+  }, [conversationId, router, session]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSen
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session?.accessToken}`
-      {
+  const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
     await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/inbox/message`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.accessToken}`
+      },
       credentials: 'include',
       body: JSON.stringify({ conversationId, text: inputText }),
     });
@@ -94,7 +95,10 @@ export default function ChatPage() {
     const priceInPaise = parseFloat(offerDetails.price) * 100;
     await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/inbox/message`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.accessToken}`
+      },
       credentials: 'include',
       body: JSON.stringify({
         conversationId,
