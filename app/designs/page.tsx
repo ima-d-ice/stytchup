@@ -1,5 +1,8 @@
 
 import DesignCard from "@/components/designs/DesignCard";
+
+export const dynamic = "force-dynamic";
+
 interface Designer {
   name: string | null; // Name might be null in DB, so add null type
 }

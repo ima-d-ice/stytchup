@@ -1,6 +1,8 @@
 import React from 'react';
 import DesignerCard from '@/components/designers/DesignerCard';
 
+export const dynamic = "force-dynamic";
+
 // Define types based on your schema
 interface UserProfile {
   bio: string | null;
