@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
+import { useSession } from 'next-auth/react'; // 1. Import useSession
 import { 
   RazorpayOptions, 
   RazorpaySuccessResponse, 
@@ -27,20 +28,23 @@ export default function RazorpayButton({
   
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { data: session } = useSession(); // 2. Get session data
 
   const handlePayment = async () => {
+    // 3. Extract the token safely
+    // @ts-ignore
+    const token = session?.accessToken || session?.user?.token;
+
+    if (!token) {
+      alert("Please login to make a payment");
+      // Optional: router.push('/login');
+      return;
+    }
+
     const key = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
     if (!key) {
       alert("Razorpay Key is missing");
       return;
-    }
-
-    // 1. RETRIEVE TOKEN (Adjust 'token' to whatever key you use in login)
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-        alert("You must be logged in to pay.");
-        return;
     }
 
     setLoading(true);
@@ -48,20 +52,18 @@ export default function RazorpayButton({
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
       
-      // 2. CREATE ORDER (Attach Token Here)
+      // --- STEP 1: CREATE ORDER ---
       const res = await fetch(`${apiUrl}/payments/create-order`, {
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` // <--- FIX IS HERE
+            'Authorization': `Bearer ${token}` // 👈 4. Attach Token Here
         },
-        // credentials: 'include', // You can likely remove this if relying on headers
         body: JSON.stringify({ amount, sourceId, type }),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        console.error("Order Creation Error:", err);
         alert(err.error || "Failed to initiate payment");
         setLoading(false);
         return;
@@ -69,8 +71,9 @@ export default function RazorpayButton({
 
       const orderData = await res.json();
 
+      // --- STEP 2: OPEN RAZORPAY ---
       const options: RazorpayOptions = {
-        key: key, 
+        key: key,
         amount: orderData.amount,
         currency: orderData.currency,
         name: "StytchUp",
@@ -79,12 +82,12 @@ export default function RazorpayButton({
         
         handler: async function (response: RazorpaySuccessResponse) {
           try {
-            // 3. VERIFY PAYMENT (Attach Token Here too if the route is protected)
+            // --- STEP 3: VERIFY PAYMENT ---
             const verifyRes = await fetch(`${apiUrl}/payments/verify`, {
               method: 'POST',
               headers: { 
                   'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}` // <--- FIX IS HERE TOO
+                  'Authorization': `Bearer ${token}` // 👈 5. Attach Token Here Too
               },
               body: JSON.stringify({
                 razorpay_order_id: response.razorpay_order_id,
@@ -103,7 +106,6 @@ export default function RazorpayButton({
               alert("Payment verification failed");
             }
           } catch (err) {
-            console.error(err);
             alert("Server error during verification");
           }
         },
@@ -122,6 +124,7 @@ export default function RazorpayButton({
     } catch (err) {
       console.error(err);
       setLoading(false);
+      alert("Something went wrong. Check console.");
     }
   };
 
