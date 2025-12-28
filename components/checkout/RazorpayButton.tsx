@@ -8,12 +8,6 @@ import {
   RazorpaySuccessResponse, 
   RazorpayErrorResponse 
 } from '@/types/razorpay'; 
-// ^ Make sure this path matches where you saved the file. 
-// If it's in src/types, '@/types/razorpay' is correct.
-// Import types if your TS config requires explicit imports, 
-// otherwise they should be available globally if configured correctly.
-// If you see red lines, uncomment the line below:
-// import { RazorpayOptions, RazorpaySuccessResponse, RazorpayErrorResponse } from '@/types/razorpay';
 
 interface RazorpayButtonProps {
   amount: number;
@@ -35,11 +29,18 @@ export default function RazorpayButton({
   const router = useRouter();
 
   const handlePayment = async () => {
-    // 1. Validate Key (Fixes: Type 'undefined' is not assignable to type 'string')
     const key = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
     if (!key) {
       alert("Razorpay Key is missing");
       return;
+    }
+
+    // 1. RETRIEVE TOKEN (Adjust 'token' to whatever key you use in login)
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+        alert("You must be logged in to pay.");
+        return;
     }
 
     setLoading(true);
@@ -47,15 +48,20 @@ export default function RazorpayButton({
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
       
+      // 2. CREATE ORDER (Attach Token Here)
       const res = await fetch(`${apiUrl}/payments/create-order`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` // <--- FIX IS HERE
+        },
+        // credentials: 'include', // You can likely remove this if relying on headers
         body: JSON.stringify({ amount, sourceId, type }),
       });
 
       if (!res.ok) {
         const err = await res.json();
+        console.error("Order Creation Error:", err);
         alert(err.error || "Failed to initiate payment");
         setLoading(false);
         return;
@@ -63,21 +69,23 @@ export default function RazorpayButton({
 
       const orderData = await res.json();
 
-      // 2. Define Options with Strict Types
       const options: RazorpayOptions = {
-        key: key, // Verified string
+        key: key, 
         amount: orderData.amount,
         currency: orderData.currency,
-        name: "StychUp",
+        name: "StytchUp",
         description: "Secure Payment",
         order_id: orderData.id,
         
         handler: async function (response: RazorpaySuccessResponse) {
           try {
+            // 3. VERIFY PAYMENT (Attach Token Here too if the route is protected)
             const verifyRes = await fetch(`${apiUrl}/payments/verify`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
+              headers: { 
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}` // <--- FIX IS HERE TOO
+              },
               body: JSON.stringify({
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
@@ -95,16 +103,15 @@ export default function RazorpayButton({
               alert("Payment verification failed");
             }
           } catch (err) {
+            console.error(err);
             alert("Server error during verification");
           }
         },
         theme: { color: "#FFC629" },
       };
 
-      // 3. Initialize Razorpay
       const paymentObject = new window.Razorpay(options);
       
-      // 4. Handle Failures (Fixes: Property 'on' does not exist)
       paymentObject.on('payment.failed', function (response: RazorpayErrorResponse) {
         setLoading(false);
         alert(`Payment Failed: ${response.error.description}`);
