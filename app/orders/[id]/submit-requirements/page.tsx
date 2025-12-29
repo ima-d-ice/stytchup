@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 export default function SubmitRequirementsPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   
@@ -32,8 +34,10 @@ export default function SubmitRequirementsPage() {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/orders/submit-measurements`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Important for cookie auth
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.accessToken}`
+        },
         body: JSON.stringify({
           orderId: id,
           measurements: form
@@ -53,7 +57,12 @@ export default function SubmitRequirementsPage() {
     }
   };
 
-  if (loading) return <div className="p-10 text-center">Loading...</div>;
+  if (status === 'loading' || loading) return <div className="p-10 text-center">Loading...</div>;
+
+  if (status === 'unauthenticated') {
+    router.push('/login');
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-[#FFFBEB] p-6 flex justify-center items-center font-sans">

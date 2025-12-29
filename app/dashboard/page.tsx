@@ -46,7 +46,6 @@ export default function DesignerDashboard() {
     if (!session?.accessToken) return;
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/orders/designer-orders`, { 
-        credentials: 'include',
         headers: {
           'Authorization': `Bearer ${session.accessToken}`
         }

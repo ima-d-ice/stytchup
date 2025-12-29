@@ -27,7 +27,6 @@ export default function MyOrdersPage() {
     if (!session?.accessToken) return;
     
     fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/orders/my-orders`, { 
-      credentials: 'include',
       headers: {
         'Authorization': `Bearer ${session.accessToken}`
       }
@@ -50,7 +49,6 @@ export default function MyOrdersPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.accessToken}`
         },
-        credentials: 'include',
         body: JSON.stringify({ orderId }),
       });
       if (res.ok) window.location.reload(); 
