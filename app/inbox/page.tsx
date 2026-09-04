@@ -21,6 +21,16 @@ export default function InboxList() {
 
   useEffect(() => {
     if (!session?.accessToken) return;
+    // Fetch my user id so we can show the *other* participant
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/profile/settings`, {
+      credentials: 'include',
+      headers: {
+        'Authorization': `Bearer ${session.accessToken}`
+      }
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data?.id) setMyId(data.id); })
+      .catch(err => console.error(err));
     // 1. Fetch Conversations
     fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/inbox/list`, { 
       credentials: 'include',
@@ -30,9 +40,7 @@ export default function InboxList() {
     })
       .then(res => res.json())
       .then(data => {
-        setConversations(data);
-        // Quick hack: Determine "My ID" by checking which user in the first convo isn't the other?
-        // Better: Fetch /auth/me or profile. For now, we rely on the UI logic below.
+        setConversations(Array.isArray(data) ? data : []);
       })
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
@@ -53,13 +61,11 @@ export default function InboxList() {
           ) : (
             <div className="divide-y divide-gray-100">
               {conversations.map((convo) => {
-                // Determine who the "Other Person" is. 
-                // Since we don't have 'myId' easily available in client without a context, 
-                // we'll just show both names or handle it dynamically in a real app.
-                // For this demo, let's assume User 2 is the other person if we are User 1.
-                // A safer way in UI: Display "Conversation with [Name]"
-                
-                const otherUser = convo.user1 ? convo.user1 : convo.user2; // Simplification
+                // Show the other participant, not ourselves
+                const otherUser = myId && convo.user1?.id === myId ? convo.user2 : convo.user1;
+                const displayName = otherUser?.name || convo.user2?.name || convo.user1?.name || "User";
+                const avatarUrl = otherUser?.profile?.avatarUrl
+                  || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`;
                 const lastMsg = convo.messages[0];
 
                 return (
@@ -70,7 +76,7 @@ export default function InboxList() {
                   >
                     <div className="relative h-12 w-12 flex-shrink-0">
                       <Image 
-                        src={otherUser?.profile?.avatarUrl || "/placeholder-avatar.png"} 
+                        src={avatarUrl} 
                         alt="Avatar" 
                         fill 
                         className="rounded-full object-cover border border-gray-200"
@@ -79,7 +85,7 @@ export default function InboxList() {
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-baseline">
                         <h3 className="text-sm font-bold text-gray-900 truncate">
-                          {otherUser?.name || "User"}
+                          {displayName}
                         </h3>
                         <span className="text-xs text-gray-400">
                           {new Date(convo.updatedAt).toLocaleDateString()}

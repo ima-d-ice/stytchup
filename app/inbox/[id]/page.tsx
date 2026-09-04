@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from "next-auth/react";
-import { io, Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 import RazorpayButton from '@/components/checkout/RazorpayButton';
 
 // ... (Interfaces remain the same) ...
@@ -24,13 +24,16 @@ export default function ChatPage() {
   const conversationId = Array.isArray(params?.id) ? params.id[0] : params?.id;
   const router = useRouter();
 
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [offerDetails, setOfferDetails] = useState({ price: '', title: '' });
   const [myId, setMyId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   // ... (useEffect for Fetching Profile & Socket connection remains the same) ...
   useEffect(() => {
@@ -48,14 +51,13 @@ export default function ChatPage() {
     
     const newSocket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000', { 
       withCredentials: true,
-      extraHeaders: {
-        Authorization: `Bearer ${session.accessToken}`
-      }
+      auth: {
+        token: `Bearer ${session.accessToken}`,
+      },
     });
-    setSocket(newSocket);
     newSocket.emit('join_chat', conversationId);
     newSocket.on('new_message', (msg: Message) => {
-      setMessages((prev) => [...prev, msg]);
+      setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
       setTimeout(scrollToBottom, 100);
     });
     fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/inbox/${conversationId}/messages`, { 
@@ -70,10 +72,6 @@ export default function ChatPage() {
 
     return () => { newSocket.close(); };
   }, [conversationId, router, session]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
 
   const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault();
@@ -92,7 +90,8 @@ export default function ChatPage() {
 
   const handleSendOffer = async () => {
     if (!offerDetails.price || !offerDetails.title) return;
-    const priceInPaise = parseFloat(offerDetails.price) * 100;
+    const priceInPaise = Math.round(parseFloat(offerDetails.price) * 100);
+    if (!Number.isFinite(priceInPaise) || priceInPaise <= 0) return;
     await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/inbox/message`, {
       method: 'POST',
       headers: { 

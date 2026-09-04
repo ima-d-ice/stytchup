@@ -59,11 +59,12 @@ export default function DesignerDashboard() {
     } finally {
       setLoading(false);
     }
-  };session
+  };
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.accessToken]);
 
   if (loading) return <div className="p-10 text-center">Loading Dashboard...</div>;
 

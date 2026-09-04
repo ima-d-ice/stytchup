@@ -11,7 +11,8 @@ import {
 } from '@/types/razorpay'; 
 
 interface RazorpayButtonProps {
-  amount: number;
+  /** @deprecated Amount is derived server-side from DB (paise). Kept for callers, ignored. */
+  amount?: number;
   sourceId: string;
   type: 'CATALOG' | 'CHAT_OFFER';
   buttonText?: string;
@@ -19,7 +20,6 @@ interface RazorpayButtonProps {
 }
 
 export default function RazorpayButton({ 
-  amount, 
   sourceId, 
   type, 
   buttonText = "Pay Now",
@@ -31,9 +31,8 @@ export default function RazorpayButton({
   const { data: session } = useSession(); // 2. Get session data
 
   const handlePayment = async () => {
-    // 3. Extract the token safely
-    // @ts-ignore
-    const token = session?.accessToken || session?.user?.token;
+    // accessToken is typed via types/next-auth.d.ts
+    const token = session?.accessToken;
 
     if (!token) {
       alert("Please login to make a payment");
@@ -53,13 +52,14 @@ export default function RazorpayButton({
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
       
       // --- STEP 1: CREATE ORDER ---
+      // NOTE: amount is derived server-side from DB (paise) — never trust client amount
       const res = await fetch(`${apiUrl}/payments/create-order`, {
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}` // 👈 4. Attach Token Here
         },
-        body: JSON.stringify({ amount, sourceId, type }),
+        body: JSON.stringify({ sourceId, type }),
       });
 
       if (!res.ok) {

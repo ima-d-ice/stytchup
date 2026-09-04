@@ -30,7 +30,7 @@ export default function RegisterPage() {
 
       // 2. If successful, redirect to login
       router.push("/login?message=Registered successfully! Please login.");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Registration Error:", err);
       setError(err instanceof Error ? err.message : "Something went wrong. Is the backend running?");
     }

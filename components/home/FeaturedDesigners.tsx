@@ -86,7 +86,7 @@ const FeaturedDesigners = async () => {
                 </div>
 
                 <Link
-                  href={`/designers/${designer.id}`}
+                  href={`/designer/${designer.id}`}
                   className="w-full max-w-[200px] py-3 rounded-2xl border-2 border-gray-200 text-center font-bold text-gray-900 hover:border-[#FFC629] hover:bg-[#FFC629] hover:shadow-[0_4px_14px_rgb(255,198,41,0.4)] transition-all duration-300"
                 >
                   View Profile
