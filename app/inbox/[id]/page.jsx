@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSession } from "next-auth/react";
 import { io } from 'socket.io-client';
 import RazorpayButton from '@/components/checkout/RazorpayButton';
+import { toPaise, fromPaise } from '@/utils/pricing';
 export default function ChatPage() {
     const { data: session } = useSession();
     const params = useParams();
@@ -71,7 +72,13 @@ export default function ChatPage() {
     const handleSendOffer = async () => {
         if (!offerDetails.price || !offerDetails.title)
             return;
-        const priceInPaise = Math.round(parseFloat(offerDetails.price) * 100);
+        let priceInPaise;
+        try {
+            priceInPaise = toPaise(offerDetails.price);
+        }
+        catch {
+            return;
+        }
         if (!Number.isFinite(priceInPaise) || priceInPaise <= 0)
             return;
         await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/inbox/message`, {
@@ -114,7 +121,7 @@ export default function ChatPage() {
                 {msg.isOffer && (<div className={`mt-1 p-5 rounded-xl border-2 ${isMe ? 'bg-gray-800 border-gray-600' : 'bg-yellow-50 border-[#FFC629]'}`}>
                     <div className="flex justify-between items-start mb-2">
                        <span className={`text-[10px] font-black uppercase tracking-widest ${isMe ? 'text-gray-400' : 'text-yellow-700'}`}>Custom Offer</span>
-                       <span className={`text-xl font-black ${isMe ? 'text-white' : 'text-black'}`}>₹{(msg.offerPrice || 0) / 100}</span>
+                       <span className={`text-xl font-black ${isMe ? 'text-white' : 'text-black'}`}>₹{fromPaise(msg.offerPrice || 0)}</span>
                     </div>
                     <h3 className={`font-bold text-base mb-4 ${isMe ? 'text-gray-200' : 'text-gray-800'}`}>{msg.offerTitle}</h3>
 

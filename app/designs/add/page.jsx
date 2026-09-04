@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from "next-auth/react";
 import { UploadButton } from "@/utils/uploadthing";
+import { toPaise } from "@/utils/pricing";
 export default function AddDesignPage() {
     const { data: session } = useSession();
     const router = useRouter();
@@ -23,7 +24,7 @@ export default function AddDesignPage() {
             return alert("Please upload an image first");
         setLoading(true);
         // Backend expects price in Paise (Integer)
-        const priceInPaise = Math.round(parseFloat(form.price) * 100);
+        const priceInPaise = toPaise(form.price);
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/designs/add`, {
                 method: 'POST',

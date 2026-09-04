@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import RazorpayButton from '@/components/checkout/RazorpayButton';
 import ContactButton from '@/components/checkout/ContactButton';
+import { formatINR } from '@/utils/pricing';
 // --- Fetch Logic ---
 async function getDesign(id) {
     try {
@@ -29,10 +30,7 @@ export default async function DesignDetailPage({ params, }) {
         notFound();
     }
     // Format price for India (INR)
-    const formattedPrice = new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR',
-    }).format(design.price / 100);
+    const formattedPrice = formatINR(design.price);
     const designerName = design.designer?.name || 'Unknown Designer';
     return (<div className="min-h-screen bg-gray-50 animate-fade-in font-sans">
       

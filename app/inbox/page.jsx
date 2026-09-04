@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from "next-auth/react";
 import Link from 'next/link';
 import Image from 'next/image';
+import { getOtherUser, displayName as otherDisplayName, avatarUrl as otherAvatarUrl } from '@/utils/conversation';
 export default function InboxList() {
     const { data: session } = useSession();
     const [conversations, setConversations] = useState([]);
@@ -48,10 +49,11 @@ export default function InboxList() {
             </div>) : (<div className="divide-y divide-gray-100">
               {conversations.map((convo) => {
                 // Show the other participant, not ourselves
-                const otherUser = myId && convo.user1?.id === myId ? convo.user2 : convo.user1;
-                const displayName = otherUser?.name || convo.user2?.name || convo.user1?.name || "User";
-                const avatarUrl = otherUser?.profile?.avatarUrl
-                    || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`;
+                const otherUser = getOtherUser(convo, myId);
+                const displayName = otherDisplayName(otherUser) !== 'User'
+                    ? otherDisplayName(otherUser)
+                    : (otherDisplayName(convo.user2) !== 'User' ? otherDisplayName(convo.user2) : otherDisplayName(convo.user1));
+                const avatarUrl = otherAvatarUrl(otherUser, displayName);
                 const lastMsg = convo.messages[0];
                 return (<Link key={convo.id} href={`/inbox/${convo.id}`} className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
                     <div className="relative h-12 w-12 flex-shrink-0">

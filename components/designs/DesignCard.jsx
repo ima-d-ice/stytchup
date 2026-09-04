@@ -1,12 +1,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { formatINR } from '@/utils/pricing';
 export default function DesignCard({ id, title, imageUrl, price, type, designerName, designerAvatar }) {
-    // Format Price to INR
-    const formattedPrice = new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR',
-        maximumFractionDigits: 0
-    }).format(price / 100);
+    const formattedPrice = formatINR(price);
     return (<Link href={`/designs/${id}`} className="group block">
       
       {/* 1. Image Container */}

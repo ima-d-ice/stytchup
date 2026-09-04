@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { formatINR } from "@/utils/pricing";
 async function getTopDesigns() {
     try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/designs`, {
@@ -17,13 +18,7 @@ async function getTopDesigns() {
         return [];
     }
 }
-const formatPrice = (cents) => {
-    return new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR',
-        maximumFractionDigits: 0,
-    }).format(cents / 100);
-};
+const formatPrice = (cents) => formatINR(cents);
 const TopDesigns = async () => {
     const designs = await getTopDesigns();
     return (<section className="py-20 bg-gray-50">
