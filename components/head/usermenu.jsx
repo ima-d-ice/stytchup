@@ -50,6 +50,11 @@ export default function UserMenu() {
                   Dashboard
                 </Link>
               </li>)}
+            {userRole === 'ADMIN' && (<li>
+                <Link href="/admin" className="block px-4 py-2 text-sm font-bold text-red-700 hover:bg-red-50 transition" onClick={() => setIsOpen(false)}>
+                  Admin Panel
+                </Link>
+              </li>)}
             <li>
               <Link href="/account-settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition" onClick={() => setIsOpen(false)}>
                 Account Settings

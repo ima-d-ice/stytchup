@@ -31,3 +31,29 @@ test('all client fetches use NEXT_PUBLIC_API_URL with localhost fallback', () =>
     );
   }
 });
+
+test('admin area is role-gated on client and edge', () => {
+  const mw = read('middleware.js');
+  assert.match(mw, /\/admin\/:path\*/);
+  assert.match(mw, /token\.role === ["']ADMIN["']/);
+  const admin = read('app/admin/page.jsx');
+  assert.match(admin, /role !== ['"]ADMIN['"]/);
+  assert.match(admin, /\/admin\/orders/);
+  assert.match(admin, /\/admin\/users/);
+  assert.match(admin, /\/admin\/designs/);
+});
+
+test('dashboards sync order status live without reload', () => {
+  for (const f of ['app/orders/page.jsx', 'app/dashboard/page.jsx']) {
+    assert.match(read(f), /useOrderSocket/);
+    assert.match(read(f), /onUpdate/);
+  }
+  assert.match(read('utils/useOrderSocket.js'), /order_updated/);
+  assert.match(read('utils/useOrderSocket.js'), /join_order/);
+});
+
+test('chat handles negotiation events live', () => {
+  const chat = read('app/inbox/[id]/page.jsx');
+  assert.match(chat, /offer_created/);
+  assert.match(chat, /offer_accepted/);
+});

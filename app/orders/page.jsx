@@ -3,10 +3,19 @@ import { useEffect, useState } from 'react';
 import { useSession } from "next-auth/react";
 import Link from 'next/link';
 import Image from 'next/image';
+import { useOrderSocket } from '@/utils/useOrderSocket';
 export default function MyOrdersPage() {
     const { data: session } = useSession();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    // Live status sync: patch the changed order in place, no reload.
+    useOrderSocket({
+        token: session?.accessToken,
+        orderIds: orders.map((o) => o.id),
+        onUpdate: ({ orderId, status }) => {
+            setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status } : o)));
+        },
+    });
     useEffect(() => {
         if (!session?.accessToken)
             return;

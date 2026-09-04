@@ -43,6 +43,14 @@ export default function ChatPage() {
             setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
             setTimeout(scrollToBottom, 100);
         });
+        // Negotiation engine: flip the offer card live when the other side pays.
+        newSocket.on('offer_created', (msg) => {
+            setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+            setTimeout(scrollToBottom, 100);
+        });
+        newSocket.on('offer_accepted', ({ messageId }) => {
+            setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, offerStatus: 'ACCEPTED' } : m)));
+        });
         fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/inbox/${conversationId}/messages`, {
             credentials: 'include',
             headers: { 'Authorization': `Bearer ${session.accessToken}` }

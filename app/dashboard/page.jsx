@@ -4,11 +4,20 @@ import { useSession } from "next-auth/react";
 import Link from 'next/link';
 import Image from 'next/image';
 import ShipModal from '@/components/dashboard/ShipModal'; // Import the modal we just made
+import { useOrderSocket } from '@/utils/useOrderSocket';
 export default function DesignerDashboard() {
     const { data: session } = useSession();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedOrderForShipping, setSelectedOrderForShipping] = useState(null);
+    // Live status sync: patch the changed order in place, no reload.
+    useOrderSocket({
+        token: session?.accessToken,
+        orderIds: orders.map((o) => o.id),
+        onUpdate: ({ orderId, status }) => {
+            setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status } : o)));
+        },
+    });
     // 1. Fetch Orders
     const fetchOrders = async () => {
         if (!session?.accessToken)
