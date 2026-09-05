@@ -1,34 +1,31 @@
 {
-  "name": "stytchup",
-  "version": "0.1.0",
+  "name": "stytchup-web",
   "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
+    "dev": "vite --port 3000",
+    "build": "vite build",
+    "lint": "oxlint",
+    "preview": "vite preview --port 3000",
     "test": "node --test tests/*.test.mjs",
     "test:ci": "node --test tests/*.test.mjs"
   },
   "dependencies": {
-    "@auth/prisma-adapter": "^2.11.1",
-    "@uploadthing/react": "^7.3.3",
-    "babel-plugin-react-compiler": "^1.0.0",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0",
-    "lucide-react": "^0.554.0",
-    "next": "16.0.10",
-    "next-auth": "^4.24.13",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "socket.io-client": "^4.8.1",
-    "uploadthing": "^7.7.4"
+    "@react-oauth/google": "^0.13.5",
+    "lucide-react": "^1.41.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.3",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "eslint": "^9",
-    "eslint-config-next": "16.0.3",
-    "tailwindcss": "^4"
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "oxlint": "^1.79.0",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.2.2"
   }
 }
