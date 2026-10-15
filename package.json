@@ -2,6 +2,7 @@
   "name": "stytchup",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,12 +12,8 @@
     "test:ci": "node --test tests/*.test.mjs"
   },
   "dependencies": {
-    "@auth/prisma-adapter": "^2.11.1",
     "@uploadthing/react": "^7.3.3",
     "babel-plugin-react-compiler": "^1.0.0",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0",
     "lucide-react": "^0.554.0",
     "next": "16.0.10",
     "next-auth": "^4.24.13",
