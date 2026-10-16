@@ -15,21 +15,6 @@ I built the storefront for StytchUp, a marketplace for made-to-order and custom 
 - Safe payments: client sends only `{ sourceId, type }` — amount is derived server-side in paise (`components/checkout/RazorpayButton.jsx:28-34`).
 - 15 `node:test` suites, zero test deps; CI runs `lint → test → build → docker build` (`.github/workflows/ci.yml`).
 
-## Demo
-
-![Demo](docs/demo.gif)
-
-> Placeholder — `docs/demo.gif` does not exist yet.
-
-Record (60s, 2 windows side by side):
-
-1. Window 1: `/` → `/designs` → `/designs/:id` → Order Now → Razorpay test checkout → `/orders`.
-2. Window 2 (designer): `/dashboard` shows the new order live via `order_updated`, no refresh.
-3. Window 1: chat at `/inbox/:id` → create offer (₹ button) → Window 2 accepts → `offer_accepted` flips the card.
-4. Window 1: `/orders/:id/submit-requirements` → submit chest/waist/hips → status flips to `IN_PROGRESS` in both windows.
-
-Screenshot fallback: `/designs/:id` with price + Order Now button, and `/inbox/:id` with an offer card.
-
 ## Architecture
 
 Next.js App Router renders pages and guards routes at the edge. Auth and uploads go through `app/api/*` handlers; data and sockets go direct to Express `:4000`.
