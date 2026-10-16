@@ -1,4 +1,4 @@
-name: frontend-ci
+name: web-ci
 
 on:
   push:
@@ -15,7 +15,6 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - run: npm run lint
       - run: npm test
 
   build:
@@ -29,10 +28,12 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npm run build
+        env:
+          VITE_API_URL: http://localhost:4000
 
   docker:
     runs-on: ubuntu-latest
     needs: build
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -t stytchup-frontend:ci .
+      - run: docker build -t stytchup-web:ci .

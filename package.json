@@ -1,13 +1,12 @@
 {
-  "name": "stytchup",
-  "version": "0.1.0",
+  "name": "stytchup-web",
   "private": true,
   "license": "MIT",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
+    "dev": "vite --port 3000",
+    "build": "vite build",
+    "lint": "oxlint",
+    "preview": "vite preview --port 3000",
     "test": "node --test tests/*.test.mjs",
     "test:ci": "node --test tests/*.test.mjs"
   },
@@ -23,9 +22,12 @@
     "uploadthing": "^7.7.4"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "eslint": "^9",
-    "eslint-config-next": "16.0.3",
-    "tailwindcss": "^4"
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "oxlint": "^1.79.0",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.2.2"
   }
 }

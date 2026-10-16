@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { getOtherUser, displayName, avatarUrl } from '../utils/conversation.js';
+import { getOtherUser, displayName, avatarUrl } from '../src/utils/conversation.js';
 
 const u1 = { id: 'a', name: 'Asha', profile: { avatarUrl: 'https://img/a.png' } };
 const u2 = { id: 'b', name: 'Ravi', profile: { avatarUrl: null } };

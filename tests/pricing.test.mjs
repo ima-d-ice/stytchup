@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { toPaise, fromPaise, formatINR } from '../utils/pricing.js';
+import { toPaise, fromPaise, formatINR } from '../src/utils/pricing.js';
 
 test('toPaise converts rupees to integer paise', () => {
   assert.equal(toPaise(499), 49900);
