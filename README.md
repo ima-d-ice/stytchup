@@ -42,20 +42,6 @@ flowchart LR
 - **Admin:** tabs for orders/users/designs; cancel/refund, role grant, activate/deactivate (`app/admin/page.jsx`).
 - **Media:** UploadThing `imageUploader` (4MB, 1 file) + `NextSSRPlugin` in `app/layout.jsx:5-10`.
 
-## Benchmarks / Results
-
-No latency/throughput numbers claimed. What the repo produces:
-
-| Suite | Count | What it proves | Reproduce |
-|---|---|---|---|
-| `pricing` | 5 | `toPaise`/`formatINR`, ₹1 = 100 paise | `npm test` |
-| `conversation` | 5 | other-user select, displayName/avatar fallback | `npm test` |
-| `apiContract` | 5 | no client amount, `NEXT_PUBLIC_API_URL` fallback, ADMIN gate, live sockets | `npm test` |
-| Total | 15 | pass on Node 20, no DB needed | `npm ci && npm test` |
-
-Methodology: `node --test tests/*.test.mjs` on [TODO: your hardware, e.g. M1 MacBook Air]. CI runs the same on `ubuntu-latest`.
-[TODO: p99 latency] — add only after you measure with k6/autocannon against a staging backend.
-
 ## Design decisions and trade-offs
 
 1. **App Router BFF over Vite SPA:** I kept Next.js for `middleware.js` edge gates and `app/api/auth` token bridging. Cost: heavier build + Node server vs static nginx.
@@ -137,4 +123,4 @@ Covers: paise conversion/rounding/reject (`utils/pricing.js`), other-user/displa
 
 Next.js 16.0.10, React 19.2.0, NextAuth 4.24.13, Tailwind 4, socket.io-client 4.8.1, UploadThing 7.7, lucide-react. Backend (separate repo): Express 5 + Socket.io + Prisma 7 + Postgres 16 + Razorpay. Node 20, Docker multi-stage, GitHub Actions.
 
-Contact: [TODO: your name] — [TODO: email] — [TODO: LinkedIn] — [TODO: portfolio]. Backend: [TODO: backend repo URL]. Live: [TODO: demo URL].
+Contact: built by **imad-ice** — [github.com/ima-d-ice](https://github.com/ima-d-ice) — imads8444@gmail.com. Backend: [ima-d-ice/stytchup-backend](https://github.com/ima-d-ice/stytchup-backend).
