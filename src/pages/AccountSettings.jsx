@@ -1,70 +1,85 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import AvatarCard from '../components/user-settings/Avatarcard';
 import ProfileForm from '../components/user-settings/Profileform';
-import { API_URL } from '../lib/api';
+import PageHeader from '../components/ui/PageHeader';
+import { API_URL, DEMO_MODE, getProfileSettings } from '../lib/api';
+
+const INITIAL = {
+  name: '',
+  email: '',
+  bio: '',
+  location: '',
+  website: '',
+  instagram: '',
+  behance: '',
+  skills: '',
+  avatarUrl: '',
+};
 
 export default function AccountSettings() {
   const { token } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    bio: '',
-    location: '',
-    website: '',
-    instagram: '',
-    behance: '',
-    skills: '',
-    avatarUrl: '',
-  });
+  const [saved, setSaved] = useState(false);
+  const [formData, setFormData] = useState(INITIAL);
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      if (!token) return;
-      try {
-        const res = await fetch(`${API_URL}/profile/settings`, {
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    if (!token) return;
+    let active = true;
+
+    getProfileSettings(token)
+      .then((data) => {
+        if (!active || !data) return;
+        const profile = data.profile || {};
+        const socials = profile.socialLinks || {};
+        setFormData({
+          name: data.name || '',
+          email: data.email || '',
+          bio: profile.bio || '',
+          location: profile.location || '',
+          website: profile.website || '',
+          instagram: socials.instagram || '',
+          behance: socials.behance || '',
+          skills: profile.skills ? profile.skills.join(', ') : '',
+          avatarUrl: profile.avatarUrl || '',
         });
-        if (res.ok) {
-          const data = await res.json();
-          const profile = data.profile || {};
-          const socials = profile.socialLinks || {};
-          setFormData({
-            name: data.name || '',
-            email: data.email || '',
-            bio: profile.bio || '',
-            location: profile.location || '',
-            website: profile.website || '',
-            instagram: socials.instagram || '',
-            behance: socials.behance || '',
-            skills: profile.skills ? profile.skills.join(', ') : '',
-            avatarUrl: profile.avatarUrl || '',
-          });
-        }
-      } catch (err) {
-        console.error('Failed to load settings', err);
-      } finally {
-        setLoading(false);
-      }
+      })
+      .catch((error) => console.error('Failed to load settings', error))
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
     };
-    fetchSettings();
   }, [token]);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (event) => {
+    setFormData((current) => ({ ...current, [event.target.name]: event.target.value }));
+    setSaved(false);
   };
 
   const handleAvatarChange = (url) => {
-    setFormData((prev) => ({ ...prev, avatarUrl: url }));
+    setFormData((current) => ({ ...current, avatarUrl: url }));
+    setSaved(false);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setSaving(true);
+    setSaved(false);
+
+    if (DEMO_MODE) {
+      window.setTimeout(() => {
+        setSaving(false);
+        setSaved(true);
+      }, 500);
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URL}/profile/update`, {
         method: 'PUT',
@@ -72,30 +87,42 @@ export default function AccountSettings() {
         body: JSON.stringify(formData),
       });
       if (res.ok) {
-        navigate(0);
+        setSaved(true);
       } else {
-        const errData = await res.json().catch(() => ({}));
-        alert(`Failed: ${errData.error || 'Unknown error'}`);
+        const error = await res.json().catch(() => ({}));
+        alert(`Failed: ${error.error || 'Unknown error'}`);
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) return <div className="flex h-screen items-center justify-center bg-gray-50">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="container-shop py-24">
+        <div className="mx-auto max-w-4xl animate-pulse space-y-4">
+          <div className="h-10 w-1/3 bg-mist" />
+          <div className="h-3 w-2/3 bg-mist" />
+          <div className="h-64 w-full bg-mist" />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
-          <p className="text-gray-500">Manage your profile and preferences</p>
-        </div>
+    <div className="bg-paper">
+      <div className="container-shop">
+        <PageHeader
+          crumbs={[{ label: 'Home', to: '/' }, { label: 'Account settings' }]}
+          eyebrow="Client area"
+          title="Account."
+          intro="Keep your details current so designers can reach you and cut to the right measurements. Your measurements live with each order."
+        />
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-1">
+        <form onSubmit={handleSubmit} className="grid gap-10 py-10 lg:grid-cols-12 lg:gap-16 lg:py-14">
+          <div className="lg:col-span-4">
             <AvatarCard
               name={formData.name}
               email={formData.email}
@@ -106,20 +133,21 @@ export default function AccountSettings() {
             />
           </div>
 
-          <div className="md:col-span-2 flex flex-col gap-6">
+          <div className="lg:col-span-8">
             <ProfileForm formData={formData} onChange={handleChange} />
 
-            <div className="flex justify-end gap-4">
-              <button type="button" onClick={() => navigate(-1)} className="px-6 py-3 rounded-full font-bold text-gray-500 hover:bg-gray-100 transition-colors">
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-8 py-3 rounded-full font-bold text-black bg-yellow-400 hover:bg-yellow-500 shadow-lg shadow-yellow-400/30 transition-all transform hover:-translate-y-0.5 disabled:opacity-50"
-              >
-                {saving ? 'Saving...' : 'Save Changes'}
-              </button>
+            <div className="mt-10 flex flex-col gap-4 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-[10px] uppercase tracking-[0.14em] text-ink/35">
+                {saved ? 'Changes saved.' : 'Changes are saved to your profile.'}
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => navigate(-1)} className="btn-outline flex-1 sm:flex-none">
+                  Cancel
+                </button>
+                <button type="submit" disabled={saving} className="btn-yellow flex-1 sm:flex-none">
+                  {saving ? 'Saving…' : 'Save changes'}
+                </button>
+              </div>
             </div>
           </div>
         </form>

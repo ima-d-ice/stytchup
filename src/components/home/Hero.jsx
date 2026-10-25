@@ -1,44 +1,65 @@
 import { Link } from 'react-router-dom';
-import { Scissors, Ruler, Shirt, Pencil, Handbag } from 'lucide-react';
+import { ArrowDown } from 'lucide-react';
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden bg-[#FFC629] text-gray-900">
-      <div className="absolute inset-0 opacity-10 pointer-events-none">
-        <Handbag className="absolute top-[10%] left-[5%] w-32 h-32 transform -rotate-12" />
-        <Pencil className="absolute top-[15%] right-[10%] w-24 h-24 transform rotate-25" />
-        <Shirt className="absolute bottom-[20%] left-[15%] w-40 h-40 transform rotate-15" />
-        <Scissors className="absolute bottom-[10%] right-[5%] w-28 h-28 transform -rotate-35" />
-        <Ruler className="absolute top-1/2 right-[20%] w-20 h-20 transform rotate-45" />
-      </div>
+    <section className="relative min-h-[72vh] overflow-hidden bg-ink text-white md:min-h-[82vh]">
+      <img
+        src="/demo/hero.jpg"
+        alt="A model wearing a made-to-measure blue wool overcoat"
+        className="absolute inset-0 h-full w-full object-cover object-[50%_30%]"
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-ink/70 via-ink/25 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-ink/60 via-transparent to-transparent" />
 
-      <div className="relative container mx-auto flex flex-col items-center px-4 py-24 text-center md:py-36 lg:px-32">
-        <h1 className="text-5xl font-black tracking-tight leading-tight sm:text-7xl">
-          StytchUp
-          <span className="block mt-2 text-white drop-shadow-sm">Creativity. Custom. You.</span>
-        </h1>
+      <div className="container-shop relative flex min-h-[72vh] flex-col justify-end pb-12 pt-24 md:min-h-[82vh] md:pb-16">
+        <div className="max-w-3xl animate-rise">
+          <div className="mb-6 flex items-center gap-4">
+            <span className="h-px w-10 bg-brand" aria-hidden="true" />
+            <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-white/75">
+              Autumn / Winter 2026
+            </p>
+          </div>
 
-        <p className="mt-8 mb-10 text-xl font-medium max-w-2xl mx-auto leading-relaxed">
-          The marketplace where top designers showcase unique textiles, and you turn them into fashion.
-        </p>
+          <h1 className="display text-[46px] leading-[0.9] tracking-[-0.025em] sm:text-6xl md:text-7xl lg:text-[92px]">
+            The measure
+            <br />
+            of you.
+          </h1>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Link
-            to="/designs"
-            className="px-10 py-4 text-lg font-bold bg-gray-900 text-white rounded-full shadow-lg hover:bg-gray-800 hover:scale-105 transition-all duration-300"
+          <p className="mt-6 max-w-md text-sm leading-relaxed text-white/70 md:text-[15px]">
+            Independent designers, real measurements, and pieces made once. Discover the new
+            collection or commission something entirely your own.
+          </p>
+
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <Link to="/designs" className="btn-yellow w-full sm:w-auto">
+              Shop the collection
+            </Link>
+            <Link
+              to="/designs?type=CUSTOM"
+              className="inline-flex w-full items-center justify-center border border-white/60 px-8 py-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:border-white hover:bg-white hover:text-ink sm:w-auto"
+            >
+              Commission a piece
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-14 flex items-end justify-between border-t border-white/20 pt-5">
+          <p className="max-w-[220px] text-[9px] uppercase leading-relaxed tracking-[0.16em] text-white/50">
+            Made to order in India
+            <br />
+            Shipped worldwide
+          </p>
+          <a
+            href="#new-in"
+            className="group inline-flex items-center gap-3 text-[9px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:text-white"
           >
-            Explore Designs
-          </Link>
-          <Link
-            to="/designer"
-            className="px-10 py-4 text-lg font-bold bg-white text-gray-900 border-2 border-white rounded-full shadow-md hover:bg-gray-50 hover:text-[#FFC629] hover:scale-105 transition-all duration-300"
-          >
-            Become a Designer
-          </Link>
+            Scroll
+            <ArrowDown className="h-3.5 w-3.5 transition-transform group-hover:translate-y-1" strokeWidth={1.4} />
+          </a>
         </div>
       </div>
-
-      <div className="absolute -bottom-1 left-0 right-0 h-16 bg-gray-50 rounded-t-[50%] scale-x-150"></div>
     </section>
   );
 }

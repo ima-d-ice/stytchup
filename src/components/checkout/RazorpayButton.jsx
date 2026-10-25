@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
-import { API_URL } from '../../lib/api';
+import { API_URL, DEMO_MODE } from '../../lib/api';
 
 export default function RazorpayButton({ sourceId, type, buttonText = 'Pay Now', onSuccess }) {
   const [loading, setLoading] = useState(false);
@@ -18,6 +18,16 @@ export default function RazorpayButton({ sourceId, type, buttonText = 'Pay Now',
   }, []);
 
   const handlePayment = async () => {
+    if (DEMO_MODE) {
+      setLoading(true);
+      window.setTimeout(() => {
+        setLoading(false);
+        if (onSuccess) onSuccess();
+        else navigate('/orders');
+      }, 700);
+      return;
+    }
+
     if (!token) {
       alert('Please login to make a payment');
       return;
@@ -90,9 +100,9 @@ export default function RazorpayButton({ sourceId, type, buttonText = 'Pay Now',
     <button
       onClick={handlePayment}
       disabled={loading}
-      className="w-full bg-black text-white font-bold py-3 px-6 rounded-2xl shadow-md hover:bg-gray-800 transition-all disabled:opacity-70 flex justify-center items-center gap-2"
+      className="btn w-full"
     >
-      {loading ? 'Processing...' : buttonText}
+      {loading ? 'Processing…' : buttonText}
     </button>
   );
 }

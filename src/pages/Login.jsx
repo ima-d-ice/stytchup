@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
-import { useAuth, } from '../auth/AuthContext';
-import { decodeJwtPayload } from '../lib/api';
+import { useAuth } from '../auth/AuthContext';
+import AuthShell from '../components/auth/AuthShell';
+import { DEMO_CREDENTIALS, DEMO_MODE, decodeJwtPayload } from '../lib/api';
 
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -12,84 +13,133 @@ export default function Login() {
   const message = searchParams.get('message');
   const { login, googleLogin } = useAuth();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setError('');
     try {
-      await login(form.email, form.password);
-      navigate('/');
-    } catch {
-      setError('Invalid email or password');
+      const data = await login(form.email, form.password);
+      navigate(data?.user?.role === 'DESIGNER' ? '/dashboard' : '/');
+    } catch (err) {
+      setError(err.message || 'Invalid email or password');
     }
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-[#FAFAFA]">
-      <div className="w-full max-w-md p-8 bg-white rounded-3xl shadow-xl border border-gray-100">
-        <h2 className="text-3xl font-black mb-8 text-center text-gray-900">Login</h2>
-
-        {message && <p className="text-green-600 text-sm mb-4 text-center font-medium bg-green-50 p-2 rounded-lg">{message}</p>}
-        {error && <p className="text-red-500 text-sm mb-4 text-center font-medium bg-red-50 p-2 rounded-lg">{error}</p>}
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <input
-            type="email"
-            placeholder="Email"
-            className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:border-[#FFC629] focus:ring-2 focus:ring-[#FFC629]/20 transition-all bg-gray-50 text-gray-700"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:border-[#FFC629] focus:ring-2 focus:ring-[#FFC629]/20 transition-all bg-gray-50 text-gray-700"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
-          <button
-            type="submit"
-            className="w-full bg-[#FFC629] text-gray-900 font-bold p-4 rounded-xl hover:bg-[#E5B225] transition-colors shadow-[0_4px_14px_rgb(255,198,41,0.4)]"
-          >
-            Sign in with Email
-          </button>
-        </form>
-
-        <div className="my-6 flex items-center">
-          <div className="grow border-t border-gray-200"></div>
-          <span className="mx-4 text-gray-400 text-sm font-medium">OR</span>
-          <div className="grow border-t border-gray-200"></div>
-        </div>
-
-        <div className="flex justify-center">
-          {import.meta.env.VITE_GOOGLE_CLIENT_ID ? (
-            <GoogleLogin
-              onSuccess={async (cred) => {
-                try {
-                  const payload = decodeJwtPayload(cred.credential);
-                  await googleLogin({ email: payload?.email, name: payload?.name });
-                  navigate('/dashboard');
-                } catch {
-                  setError('Google login failed');
-                }
-              }}
-              onError={() => setError('Google login failed')}
-            />
-          ) : (
-            <p className="text-xs text-gray-400 text-center">
-              Set VITE_GOOGLE_CLIENT_ID to enable Google login.
-              <br />
-              Backend /auth/google-sync is ready.
-            </p>
-          )}
-        </div>
-
-        <p className="mt-6 text-center text-gray-600">
-          Don&apos;t have an account?{' '}
-          <Link to="/register" className="text-black font-bold hover:underline decoration-[#FFC629] decoration-2 underline-offset-2">
-            Register
+    <AuthShell
+      eyebrow="Client area"
+      title="Welcome back."
+      intro="Sign in to follow your orders, speak with your designer, and keep your measurements on file."
+      footer={
+        <p className="text-[12px] text-ink/45">
+          New to StytchUp?{' '}
+          <Link to="/register" className="link-line font-medium text-ink">
+            Create an account
           </Link>
         </p>
+      }
+    >
+      {message && (
+        <p className="mb-6 border-l-2 border-brand pl-3 text-[11px] leading-relaxed text-ink/60">{message}</p>
+      )}
+      {error && (
+        <p className="mb-6 border-l-2 border-red-500 pl-3 text-[11px] leading-relaxed text-red-600">{error}</p>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-7">
+        <div>
+          <label htmlFor="login-email" className="field-label">
+            Email address
+          </label>
+          <input
+            id="login-email"
+            type="email"
+            required
+            autoComplete="email"
+            className="field"
+            value={form.email}
+            onChange={(event) => setForm({ ...form, email: event.target.value })}
+          />
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between">
+            <label htmlFor="login-password" className="field-label">
+              Password
+            </label>
+            <span className="mb-1 text-[9px] uppercase tracking-[0.14em] text-ink/30">Min. 8 characters</span>
+          </div>
+          <input
+            id="login-password"
+            type="password"
+            required
+            autoComplete="current-password"
+            className="field"
+            value={form.password}
+            onChange={(event) => setForm({ ...form, password: event.target.value })}
+          />
+        </div>
+
+        <button type="submit" className="btn-yellow w-full">
+          Sign in
+        </button>
+      </form>
+
+      {DEMO_MODE && (
+        <div className="mt-8 border border-line p-4">
+          <p className="eyebrow mb-3">Demo access</p>
+          <div className="flex flex-wrap gap-2">
+            {DEMO_CREDENTIALS.map((credential) => (
+              <button
+                key={credential.label}
+                type="button"
+                onClick={() => setForm({ email: credential.email, password: credential.password })}
+                className="border border-line px-3 py-1.5 text-[9px] uppercase tracking-[0.14em] text-ink/55 transition-colors hover:border-ink hover:text-ink"
+              >
+                Use {credential.label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-3 text-[10px] leading-relaxed text-ink/35">
+            Sample data only. Customer: customer@stytchup.com / customer1234
+            <br />
+            Designer: designer@stytchup.com / designer1234
+            <br />
+            Admin: admin@stytchup.com / admin1234
+          </p>
+        </div>
+      )}
+
+      <div className="my-8 flex items-center gap-4">
+        <div className="h-px flex-1 bg-line" />
+        <span className="text-[9px] uppercase tracking-[0.18em] text-ink/30">or</span>
+        <div className="h-px flex-1 bg-line" />
       </div>
-    </div>
+
+      <div className="flex justify-center">
+        {import.meta.env.VITE_GOOGLE_CLIENT_ID ? (
+          <GoogleLogin
+            onSuccess={async (cred) => {
+              try {
+                const payload = decodeJwtPayload(cred.credential);
+                await googleLogin({ email: payload?.email, name: payload?.name });
+                navigate('/dashboard');
+              } catch {
+                setError('Google login failed');
+              }
+            }}
+            onError={() => setError('Google login failed')}
+          />
+        ) : (
+          <button
+            type="button"
+            disabled
+            className="btn-outline w-full cursor-not-allowed opacity-50"
+            title="Set VITE_GOOGLE_CLIENT_ID to enable Google login"
+          >
+            Continue with Google
+          </button>
+        )}
+      </div>
+    </AuthShell>
   );
 }

@@ -1,31 +1,36 @@
 import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
-import { API_URL } from '../lib/api';
+import { API_URL, DEMO_MODE } from '../lib/api';
 
-// Join `order:<id>` rooms for the given order IDs and invoke onUpdate
-// ({ orderId, status, ... }) live — no page reload needed.
-export function useOrderSocket({ token, orderIds, onUpdate }) {
-  const handlerRef = useRef(null);
-  const idsKey = JSON.stringify(orderIds || []);
+/**
+ * Subscribe to live order status updates.
+ * Joins every order room for the signed-in buyer/designer.
+ */
+export function useOrderSocket({ token, orderIds = [], onUpdate }) {
+  const onUpdateRef = useRef(onUpdate);
+  onUpdateRef.current = onUpdate;
+
+  const idsKey = orderIds.filter(Boolean).join(',');
 
   useEffect(() => {
-    handlerRef.current = onUpdate;
-  }, [onUpdate]);
+    if (DEMO_MODE || !token || !idsKey) return undefined;
 
-  useEffect(() => {
-    const ids = JSON.parse(idsKey);
-    if (!token || ids.length === 0) return;
     const socket = io(API_URL, {
       withCredentials: true,
       auth: { token: `Bearer ${token}` },
     });
-    socket.on('connect', () => {
-      for (const id of ids) socket.emit('join_order', id);
-    });
-    socket.on('order_updated', (payload) => handlerRef.current?.(payload));
-    return () => {
-      socket.close();
+
+    const joinRooms = () => {
+      idsKey.split(',').forEach((orderId) => socket.emit('join_order', orderId));
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    socket.on('connect', joinRooms);
+    socket.on('order_updated', (payload) => {
+      if (payload?.orderId) onUpdateRef.current?.(payload);
+    });
+
+    return () => socket.disconnect();
   }, [token, idsKey]);
 }
+
+export default useOrderSocket;

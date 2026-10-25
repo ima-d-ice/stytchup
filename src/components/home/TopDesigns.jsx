@@ -1,66 +1,75 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { formatINR } from '@/utils/pricing';
-import { API_URL } from '@/lib/api';
+import DesignCard from '../designs/DesignCard';
+import { ProductGridSkeleton } from '../ui/Skeletons';
+import { getDesigns } from '../../lib/api';
 
 export default function TopDesigns() {
   const [designs, setDesigns] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_URL}/designs`, { cache: 'no-store' })
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => setDesigns(Array.isArray(data) ? data.slice(0, 4) : []))
-      .catch((err) => {
-        console.error('Error fetching top designs:', err);
-        setDesigns([]);
+    let active = true;
+    getDesigns()
+      .then((data) => {
+        if (active) setDesigns(Array.isArray(data) ? data.slice(0, 8) : []);
+      })
+      .catch((error) => {
+        console.error('Error fetching designs:', error);
+        if (active) setDesigns([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
       });
+    return () => {
+      active = false;
+    };
   }, []);
 
   return (
-    <section className="py-20 bg-gray-50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12">
-          <div className="text-left">
-            <h2 className="text-3xl font-black text-gray-900 sm:text-4xl uppercase tracking-tight">Trending Drops</h2>
-            <p className="mt-2 text-lg text-gray-500 font-medium">Fresh looks from our community.</p>
+    <section id="new-in" className="section bg-paper">
+      <div className="container-shop">
+        <div className="mb-8 flex items-end justify-between gap-6 md:mb-10">
+          <div>
+            <p className="eyebrow mb-3">Latest from the atelier</p>
+            <h2 className="display text-3xl leading-none tracking-[-0.02em] md:text-5xl">New in</h2>
           </div>
-          <Link to="/designs" className="hidden md:flex items-center text-sm font-bold text-[#FFC629] hover:text-yellow-600 transition-colors uppercase tracking-widest">
-            View All <ArrowRight className="ml-2 w-4 h-4" />
+          <Link
+            to="/designs"
+            className="group hidden items-center gap-3 text-[10px] uppercase tracking-[0.18em] text-ink/60 transition-colors hover:text-ink sm:flex"
+          >
+            View all
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" strokeWidth={1.4} />
           </Link>
         </div>
 
-        {designs.length > 0 ? (
-          <div className="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
+        {loading ? (
+          <ProductGridSkeleton count={4} />
+        ) : designs.length > 0 ? (
+          <div className="grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-4 md:grid-cols-3 lg:grid-cols-4">
             {designs.map((design) => (
-              <Link to={`/designs/${design.id}`} key={design.id} className="group relative">
-                <div className="aspect-[3/4] w-full overflow-hidden rounded-3xl bg-gray-200 shadow-sm transition-all duration-300 group-hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
-                  <img src={design.imageUrl} alt={design.title} className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105" loading="lazy" />
-                  <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                    <button className="w-full rounded-xl bg-white/90 backdrop-blur-sm py-3 text-sm font-bold text-gray-900 shadow-lg hover:bg-[#FFC629] hover:text-white transition-colors">
-                      View Details
-                    </button>
-                  </div>
-                </div>
-                <div className="mt-4 flex justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900">{design.title}</h3>
-                    <p className="mt-1 text-sm text-gray-500 font-medium">{design.designer?.name || 'Unknown'}</p>
-                  </div>
-                  <p className="text-lg font-bold text-[#FFC629]">{formatINR(design.price)}</p>
-                </div>
-              </Link>
+              <DesignCard
+                key={design.id}
+                id={design.id}
+                title={design.title}
+                imageUrl={design.imageUrl}
+                price={design.price}
+                type={design.type}
+                designerName={design.designer?.name || 'StytchUp atelier'}
+                category={design.category}
+              />
             ))}
           </div>
         ) : (
-          <div className="rounded-3xl border-2 border-dashed border-gray-300 p-12 text-center">
-            <p className="text-gray-500">No designs found. Is the backend running?</p>
+          <div className="border-y border-line py-16 text-center">
+            <p className="text-sm text-ink/45">New pieces are being added. Please check back shortly.</p>
           </div>
         )}
 
-        <div className="mt-12 text-center md:hidden">
-          <Link to="/designs" className="inline-flex items-center px-8 py-3 text-base font-bold text-gray-900 bg-[#FFC629] rounded-full hover:bg-[#e5b225] transition-colors">
-            Explore All Designs
+        <div className="mt-10 flex justify-center sm:hidden">
+          <Link to="/designs" className="btn-outline w-full">
+            View all designs
           </Link>
         </div>
       </div>

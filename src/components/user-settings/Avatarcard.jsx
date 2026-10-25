@@ -1,71 +1,71 @@
-import { MapPin, Camera } from 'lucide-react';
+import { Camera, MapPin } from 'lucide-react';
 import { useRef } from 'react';
 
-// React port: UploadThing BFF removed. Accept an image URL directly,
-// or pick a local file for an instant preview (sent as preview URL string).
-// For production uploads, wire POST /uploads on Express + S3/UploadThing SDK.
 export default function AvatarCard({ name, email, location, avatarUrl, onLocationChange, onAvatarChange }) {
   const fileRef = useRef(null);
 
-  const handleFile = (e) => {
-    const file = e.target.files?.[0];
+  const handleFile = (event) => {
+    const file = event.target.files?.[0];
     if (!file) return;
-    const preview = URL.createObjectURL(file);
-    onAvatarChange(preview);
+    onAvatarChange(URL.createObjectURL(file));
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex flex-col items-center text-center sticky top-8">
-      <div className="relative w-32 h-32 mb-4 group">
-        <div className="w-full h-full rounded-full bg-yellow-400 flex items-center justify-center border-4 border-white shadow-md overflow-hidden relative z-0">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="Avatar" className="object-cover w-full h-full" />
-          ) : (
-            <span className="text-4xl font-bold text-white">{name?.charAt(0)?.toUpperCase() || 'U'}</span>
-          )}
-        </div>
-
-        <div className="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
-          <Camera className="text-white w-8 h-8" />
-        </div>
+    <div className="sticky top-28">
+      <div className="group relative h-28 w-28 overflow-hidden bg-mist">
+        {avatarUrl ? (
+          <img src={avatarUrl} alt={name ? `${name} avatar` : 'Avatar'} className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center font-display text-4xl text-ink/25">
+            {name?.charAt(0)?.toUpperCase() || 'U'}
+          </div>
+        )}
 
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className="absolute inset-0 z-20 rounded-full opacity-0 cursor-pointer"
+          className="absolute inset-0 flex items-center justify-center bg-ink/45 text-white opacity-0 transition-opacity group-hover:opacity-100"
           aria-label="Change avatar"
-        />
+        >
+          <Camera className="h-5 w-5" strokeWidth={1.3} />
+        </button>
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
       </div>
 
-      <h2 className="text-xl font-bold text-gray-900">{name}</h2>
-      <p className="text-sm text-gray-500 mb-4">{email}</p>
+      <h2 className="mt-5 font-display text-3xl leading-none tracking-[-0.02em]">{name || 'Your name'}</h2>
+      <p className="mt-2 text-[12px] text-ink/40">{email}</p>
 
-      <div className="w-full border-t border-gray-100 my-4"></div>
-
-      <div className="w-full text-left">
-        <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-          <MapPin size={14} /> Location
+      <div className="mt-8 border-t border-line pt-5">
+        <label htmlFor="profile-location" className="field-label flex items-center gap-2">
+          <MapPin className="h-3 w-3" strokeWidth={1.4} />
+          Location
         </label>
         <input
+          id="profile-location"
           type="text"
           name="location"
           value={location}
           onChange={onLocationChange}
-          placeholder="e.g. New York, USA"
-          className="w-full bg-gray-50 rounded-xl px-4 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all border border-transparent focus:bg-white"
+          placeholder="City, country"
+          className="field"
         />
       </div>
 
-      <div className="w-full text-left mt-4">
-        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Avatar URL</label>
+      <div className="mt-5">
+        <label htmlFor="profile-avatar" className="field-label">
+          Avatar URL
+        </label>
         <input
+          id="profile-avatar"
           type="url"
           value={avatarUrl || ''}
-          onChange={(e) => onAvatarChange(e.target.value)}
-          placeholder="https://..."
-          className="w-full bg-gray-50 rounded-xl px-4 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 border border-transparent focus:bg-white"
+          onChange={(event) => onAvatarChange(event.target.value)}
+          placeholder="https://…"
+          className="field"
         />
+        <p className="mt-2 text-[9px] leading-relaxed text-ink/30">
+          Upload a file for a preview, or paste a hosted image URL to save it.
+        </p>
       </div>
     </div>
   );

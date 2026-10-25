@@ -1,27 +1,26 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { API_URL } from '../lib/api';
+import PageHeader from '../components/ui/PageHeader';
+import StatusLabel from '../components/ui/StatusLabel';
+import { API_URL, DEMO_MODE, getAdminData } from '../lib/api';
+import { formatINR } from '../utils/pricing';
 
-function useAdminFetch(path) {
+const TABS = ['orders', 'users', 'designs'];
+
+function useAdminData(kind) {
   const { token } = useAuth();
-  const [data, setData] = useState(null);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const load = async () => {
     if (!token) return;
     setLoading(true);
+    setError('');
     try {
-      const res = await fetch(`${API_URL}${path}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.status === 403) {
-        setError('Forbidden: admin role required');
-        return;
-      }
-      if (!res.ok) throw new Error('fetch failed');
-      setData(await res.json());
+      const result = await getAdminData(kind, token);
+      setData(Array.isArray(result) ? result : []);
     } catch {
       setError('Failed to load. Is the backend running?');
     } finally {
@@ -32,19 +31,21 @@ function useAdminFetch(path) {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, path]);
+  }, [token, kind]);
+
   return { data, loading, error, reload: load, token };
 }
 
 async function adminAction(path, method, token, body) {
+  if (DEMO_MODE) return { ok: true };
   const res = await fetch(`${API_URL}${path}`, {
     method,
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || 'Action failed');
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.error || 'Action failed');
   }
   return res.json();
 }
@@ -53,7 +54,6 @@ export default function Admin() {
   const { user, status } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState('orders');
-
   const role = user?.role?.toUpperCase?.() || '';
 
   useEffect(() => {
@@ -61,143 +61,186 @@ export default function Admin() {
     else if (status === 'authenticated' && role !== 'ADMIN') navigate('/');
   }, [status, role, navigate]);
 
-  if (status === 'loading') return <div className="p-10 text-center">Loading…</div>;
-  if (role !== 'ADMIN') return <div className="p-10 text-center">Checking permissions…</div>;
+  if (status === 'loading') {
+    return <div className="container-shop py-24 text-center text-sm text-ink/40">Loading…</div>;
+  }
+  if (role !== 'ADMIN') {
+    return <div className="container-shop py-24 text-center text-sm text-ink/40">Checking permissions…</div>;
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-black text-gray-900">Admin Panel</h1>
-        <p className="text-gray-500 mb-6">Users, orders and designs across the marketplace.</p>
-        <div className="flex gap-2 mb-6">
-          {['orders', 'users', 'designs'].map((t) => (
+    <div className="bg-paper">
+      <div className="container-shop">
+        <PageHeader
+          crumbs={[{ label: 'Home', to: '/' }, { label: 'Admin' }]}
+          eyebrow="Operations"
+          title="Admin"
+          intro="Users, orders, and designs across the marketplace."
+        >
+          <a
+            href={`${API_URL}/docs`}
+            target="_blank"
+            rel="noreferrer"
+            className="link-line text-[10px] uppercase tracking-[0.16em] text-ink/40 hover:text-ink"
+          >
+            API docs
+          </a>
+        </PageHeader>
+
+        <div className="flex items-center gap-8 border-b border-line py-4">
+          {TABS.map((entry) => (
             <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-5 py-2 rounded-full font-bold capitalize ${tab === t ? 'bg-black text-white' : 'bg-white text-gray-600 border'}`}
+              key={entry}
+              type="button"
+              onClick={() => setTab(entry)}
+              className={`relative pb-1 text-[10px] font-medium uppercase tracking-[0.18em] transition-colors ${
+                tab === entry ? 'text-ink' : 'text-ink/35 hover:text-ink'
+              }`}
             >
-              {t}
+              {entry}
+              {tab === entry && <span className="absolute inset-x-0 -bottom-[5px] h-[2px] bg-brand" aria-hidden="true" />}
             </button>
           ))}
         </div>
-        {tab === 'orders' && <OrdersTab />}
-        {tab === 'users' && <UsersTab />}
-        {tab === 'designs' && <DesignsTab />}
-        <p className="mt-8 text-xs text-gray-400">
-          API docs:{' '}
-          <a className="underline" href={`${API_URL}/docs`} target="_blank" rel="noreferrer">
-            {API_URL}/docs
-          </a>
-        </p>
+
+        <div className="py-10">
+          {tab === 'orders' && <OrdersTab />}
+          {tab === 'users' && <UsersTab />}
+          {tab === 'designs' && <DesignsTab />}
+        </div>
       </div>
     </div>
   );
 }
 
 function OrdersTab() {
-  const { data: orders, loading, error, reload, token } = useAdminFetch('/admin/orders');
+  const { data: orders, loading, error, reload, token } = useAdminData('orders');
+
   const act = async (id, action) => {
-    if (!confirm(`${action} order ${id.slice(-8)}?`)) return;
+    if (!window.confirm(`${action} order ${id.slice(-8)}?`)) return;
     try {
       await adminAction(`/admin/orders/${id}/${action}`, 'POST', token);
-      reload();
-    } catch (e) {
-      alert(e.message);
+      if (!DEMO_MODE) reload();
+    } catch (error) {
+      alert(error.message);
     }
   };
-  if (loading) return <p>Loading orders…</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
+
+  if (loading) return <p className="text-sm text-ink/40">Loading orders…</p>;
+  if (error) return <p className="text-sm text-red-500">{error}</p>;
+
   return (
-    <div className="space-y-3">
-      {(orders || []).map((o) => (
-        <div key={o.id} className="bg-white rounded-2xl p-4 border flex flex-wrap items-center gap-4 justify-between">
+    <div className="border-t border-line">
+      {orders.map((order) => (
+        <div key={order.id} className="flex flex-wrap items-center justify-between gap-4 border-b border-line py-5">
           <div>
-            <p className="font-bold">{o.design?.title || o.designSnapshot?.title || 'Custom order'}</p>
-            <p className="text-xs text-gray-500">
-              {o.buyer?.email} · ₹{(o.totalAmount / 100).toFixed(0)} · <b>{o.status}</b>
+            <p className="text-[13px] font-medium text-ink">
+              {order.design?.title || order.designSnapshot?.title || 'Custom order'}
+            </p>
+            <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink/35">
+              {order.buyer?.email} · {formatINR(order.totalAmount)}
             </p>
           </div>
-          <div className="flex gap-2">
-            <button onClick={() => act(o.id, 'cancel')} className="px-4 py-1.5 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
-              Cancel
-            </button>
-            <button onClick={() => act(o.id, 'refund')} className="px-4 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border">
-              Refund
-            </button>
+          <div className="flex items-center gap-6">
+            <StatusLabel status={order.status} />
+            <div className="flex gap-2">
+              <button type="button" onClick={() => act(order.id, 'cancel')} className="border border-line px-3 py-1.5 text-[9px] uppercase tracking-[0.14em] text-ink/55 transition-colors hover:border-red-500 hover:text-red-600">
+                Cancel
+              </button>
+              <button type="button" onClick={() => act(order.id, 'refund')} className="border border-line px-3 py-1.5 text-[9px] uppercase tracking-[0.14em] text-ink/55 transition-colors hover:border-ink hover:text-ink">
+                Refund
+              </button>
+            </div>
           </div>
         </div>
       ))}
-      {(!orders || orders.length === 0) && <p className="text-gray-400">No orders yet.</p>}
+      {orders.length === 0 && <p className="py-16 text-center text-sm text-ink/35">No orders yet.</p>}
     </div>
   );
 }
 
 function UsersTab() {
-  const { data: users, loading, error, reload, token } = useAdminFetch('/admin/users');
+  const { data: users, loading, error, reload, token } = useAdminData('users');
+
   const setRole = async (id, role) => {
     try {
       await adminAction(`/admin/users/${id}/role`, 'POST', token, { role });
-      reload();
-    } catch (e) {
-      alert(e.message);
+      if (!DEMO_MODE) reload();
+    } catch (error) {
+      alert(error.message);
     }
   };
-  if (loading) return <p>Loading users…</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
+
+  if (loading) return <p className="text-sm text-ink/40">Loading users…</p>;
+  if (error) return <p className="text-sm text-red-500">{error}</p>;
+
   return (
-    <div className="space-y-3">
-      {(users || []).map((u) => (
-        <div key={u.id} className="bg-white rounded-2xl p-4 border flex flex-wrap items-center gap-4 justify-between">
+    <div className="border-t border-line">
+      {users.map((user) => (
+        <div key={user.id} className="flex flex-wrap items-center justify-between gap-4 border-b border-line py-5">
           <div>
-            <p className="font-bold">
-              {u.name || 'Unnamed'} <span className="text-xs font-mono text-gray-400">{u.id.slice(-6)}</span>
+            <p className="text-[13px] font-medium text-ink">
+              {user.name || 'Unnamed'}
+              <span className="ml-2 font-mono text-[9px] text-ink/25">{user.id.slice(-6)}</span>
             </p>
-            <p className="text-xs text-gray-500">
-              {u.email} · <b>{u.role}</b>
-            </p>
+            <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink/35">{user.email}</p>
           </div>
-          <select value={u.role} onChange={(e) => setRole(u.id, e.target.value)} className="border rounded-full px-3 py-1.5 text-sm font-bold">
-            {['CUSTOMER', 'DESIGNER', 'ADMIN'].map((r) => (
-              <option key={r} value={r}>
-                {r}
+          <select
+            value={user.role}
+            onChange={(event) => setRole(user.id, event.target.value)}
+            className="cursor-pointer border border-line bg-transparent px-3 py-2 text-[9px] uppercase tracking-[0.14em] text-ink focus:border-ink focus:outline-none"
+          >
+            {['CUSTOMER', 'DESIGNER', 'ADMIN'].map((role) => (
+              <option key={role} value={role}>
+                {role}
               </option>
             ))}
           </select>
         </div>
       ))}
+      {users.length === 0 && <p className="py-16 text-center text-sm text-ink/35">No users yet.</p>}
     </div>
   );
 }
 
 function DesignsTab() {
-  const { data: designs, loading, error, reload, token } = useAdminFetch('/admin/designs');
-  const toggle = async (d) => {
+  const { data: designs, loading, error, reload, token } = useAdminData('designs');
+
+  const toggle = async (design) => {
     try {
-      await adminAction(`/admin/designs/${d.id}/active`, 'PATCH', token, { isActive: !d.isActive });
-      reload();
-    } catch (e) {
-      alert(e.message);
+      await adminAction(`/admin/designs/${design.id}/active`, 'PATCH', token, { isActive: !design.isActive });
+      if (!DEMO_MODE) reload();
+    } catch (error) {
+      alert(error.message);
     }
   };
-  if (loading) return <p>Loading designs…</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
+
+  if (loading) return <p className="text-sm text-ink/40">Loading designs…</p>;
+  if (error) return <p className="text-sm text-red-500">{error}</p>;
+
   return (
-    <div className="space-y-3">
-      {(designs || []).map((d) => (
-        <div key={d.id} className="bg-white rounded-2xl p-4 border flex flex-wrap items-center gap-4 justify-between">
+    <div className="border-t border-line">
+      {designs.map((design) => (
+        <div key={design.id} className="flex flex-wrap items-center justify-between gap-4 border-b border-line py-5">
           <div>
-            <p className="font-bold">
-              {d.title} {!d.isActive && <span className="text-xs text-red-500">(hidden)</span>}
+            <p className="text-[13px] font-medium text-ink">
+              {design.title}
+              {!design.isActive && <span className="ml-2 text-[9px] uppercase tracking-[0.14em] text-red-500">Hidden</span>}
             </p>
-            <p className="text-xs text-gray-500">
-              {d.designer?.email} · ₹{(d.price / 100).toFixed(0)}
+            <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink/35">
+              {design.designer?.email} · {formatINR(design.price)}
             </p>
           </div>
-          <button onClick={() => toggle(d)} className="px-4 py-1.5 rounded-full text-xs font-bold bg-gray-100 border">
-            {d.isActive ? 'Deactivate' : 'Activate'}
+          <button
+            type="button"
+            onClick={() => toggle(design)}
+            className="border border-line px-3 py-1.5 text-[9px] uppercase tracking-[0.14em] text-ink/55 transition-colors hover:border-ink hover:text-ink"
+          >
+            {design.isActive ? 'Deactivate' : 'Activate'}
           </button>
         </div>
       ))}
+      {designs.length === 0 && <p className="py-16 text-center text-sm text-ink/35">No designs yet.</p>}
     </div>
   );
 }

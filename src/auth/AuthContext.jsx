@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { API_URL } from '../lib/api';
+import { API_URL, DEMO_MODE, demoLogin, getDemoAccountByToken } from '../lib/api';
 
 const AuthContext = createContext(null);
 
@@ -41,6 +41,12 @@ export function AuthProvider({ children }) {
   // Credentials login -> Express POST /auth/login {email,password} -> {user, token}
   const login = useCallback(
     async (email, password) => {
+      if (DEMO_MODE) {
+        const data = demoLogin(email, password);
+        persist(data.user, data.token);
+        return data;
+      }
+
       const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,6 +64,12 @@ export function AuthProvider({ children }) {
   // then syncs via Express POST /auth/google-sync (same as NextAuth jwt() did).
   const googleLogin = useCallback(
     async ({ email, name }) => {
+      if (DEMO_MODE) {
+        const data = demoLogin('customer@stytchup.com', 'customer1234');
+        persist({ ...data.user, name: name || data.user.name, email: email || data.user.email }, data.token);
+        return data;
+      }
+
       const res = await fetch(`${API_URL}/auth/google-sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -73,6 +85,13 @@ export function AuthProvider({ children }) {
 
   const updateRole = useCallback(
     async (targetRole) => {
+      if (DEMO_MODE) {
+        const nextToken = `demo-token-${targetRole.toLowerCase()}`;
+        const account = getDemoAccountByToken(nextToken);
+        persist(account.user, nextToken);
+        return account.user;
+      }
+
       // targetRole: 'designer' | 'customer' (lowercase, backend expectation)
       const res = await fetch(`${API_URL}/auth/change-role`, {
         method: 'POST',
@@ -118,6 +137,6 @@ export function useAuth() {
 
 // Back-compat shim for ported `useSession()` calls
 export function useSession() {
-  const { data, status, updateRole } = useAuth();
+  const { data, status } = useAuth();
   return { data, status, update: async ({ role } = {}) => role };
 }

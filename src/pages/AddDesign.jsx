@@ -1,154 +1,234 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ImagePlus, X } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
+import PageHeader from '../components/ui/PageHeader';
 import { toPaise } from '../utils/pricing';
-import { API_URL } from '../lib/api';
+import { API_URL, DEMO_MODE } from '../lib/api';
+
+const INITIAL_FORM = {
+  title: '',
+  description: '',
+  price: '',
+  imageUrl: '',
+  type: 'CATALOG',
+  material: '',
+  sizeGuide: '',
+  category: '',
+};
 
 export default function AddDesign() {
   const { token } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    price: '',
-    imageUrl: '',
-    type: 'CATALOG',
-    material: '',
-    sizeGuide: '',
-  });
+  const [form, setForm] = useState(INITIAL_FORM);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.imageUrl) return alert('Please provide an image URL first');
+  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!form.imageUrl) {
+      alert('Please add an image URL first');
+      return;
+    }
+
+    if (DEMO_MODE) {
+      setLoading(true);
+      window.setTimeout(() => {
+        setLoading(false);
+        navigate('/dashboard');
+      }, 600);
+      return;
+    }
+
     setLoading(true);
-    const priceInPaise = toPaise(form.price);
     try {
       const res = await fetch(`${API_URL}/designs/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ ...form, price: priceInPaise }),
+        body: JSON.stringify({ ...form, price: toPaise(form.price) }),
       });
       if (res.ok) {
         navigate('/dashboard');
       } else {
-        const err = await res.json().catch(() => ({}));
-        alert(err.error || 'Failed to create design');
+        const error = await res.json().catch(() => ({}));
+        alert(error.error || 'Failed to create design');
       }
-    } catch (err) {
-      console.error(err);
-      alert('Network error occurred.');
+    } catch (error) {
+      console.error(error);
+      alert('Network error. Is the backend running?');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white p-6 flex justify-center font-sans text-gray-900">
-      <div className="max-w-2xl w-full">
-        <h1 className="text-3xl font-black text-gray-900 mb-2">New Creation</h1>
-        <p className="text-gray-500 mb-8">Share your latest design with the world.</p>
+    <div className="bg-paper">
+      <div className="container-shop">
+        <PageHeader
+          crumbs={[{ label: 'Home', to: '/' }, { label: 'Studio', to: '/dashboard' }, { label: 'New design' }]}
+          eyebrow="The atelier"
+          title="New design"
+          intro="Publish a catalog piece or open a custom commission. Add a clear image and honest measurements — clients can ask for the rest."
+        />
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="group relative flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-3xl p-8 bg-gray-50 hover:bg-yellow-50 hover:border-[#FFC629] transition-all duration-300">
+        <form onSubmit={handleSubmit} className="grid gap-10 py-10 lg:grid-cols-12 lg:gap-14 lg:py-14">
+          <div className="lg:col-span-5">
+            <p className="eyebrow mb-3">Image</p>
             {form.imageUrl ? (
-              <div className="relative w-full aspect-square md:aspect-video rounded-xl overflow-hidden shadow-md">
-                <img src={form.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+              <div className="relative aspect-[3/4] w-full overflow-hidden bg-mist">
+                <img src={form.imageUrl} alt="Design preview" className="h-full w-full object-cover" />
                 <button
                   type="button"
-                  onClick={() => setForm({ ...form, imageUrl: '' })}
-                  className="absolute top-2 right-2 bg-white/90 p-2 rounded-full shadow-sm hover:bg-red-50 text-red-500 font-bold"
+                  onClick={() => update('imageUrl', '')}
+                  className="absolute right-3 top-3 bg-paper/95 p-2 text-ink transition-colors hover:bg-brand"
+                  aria-label="Remove image"
                 >
-                  ✕
+                  <X className="h-3.5 w-3.5" strokeWidth={1.4} />
                 </button>
               </div>
             ) : (
-              <div className="text-center w-full">
-                <div className="mb-4 p-4 bg-white rounded-full shadow-sm inline-block">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-gray-400">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                    />
-                  </svg>
-                </div>
-                <input
-                  type="url"
-                  placeholder="Paste image URL (https://...)"
-                  className="w-full bg-white border border-gray-200 rounded-xl p-4 font-medium text-gray-700 focus:ring-2 focus:ring-[#FFC629] outline-none"
-                  value={form.imageUrl}
-                  onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                />
-                <p className="text-xs text-gray-400 mt-3 font-medium">Paste a hosted image URL. For direct uploads, wire Express POST /uploads.</p>
+              <div className="flex aspect-[3/4] w-full flex-col items-center justify-center border border-dashed border-line bg-mist/60 p-6 text-center">
+                <ImagePlus className="h-6 w-6 text-ink/30" strokeWidth={1.2} />
+                <p className="mt-4 text-[10px] uppercase tracking-[0.16em] text-ink/40">Paste a hosted image URL</p>
+                <p className="mt-2 max-w-[200px] text-[10px] leading-relaxed text-ink/30">
+                  Use a link from your studio site or a stock library. Direct uploads are coming next.
+                </p>
               </div>
             )}
+
+            <div className="mt-4">
+              <label htmlFor="design-image" className="field-label">
+                Image URL
+              </label>
+              <input
+                id="design-image"
+                type="url"
+                placeholder="https://…"
+                className="field"
+                value={form.imageUrl}
+                onChange={(event) => update('imageUrl', event.target.value)}
+              />
+            </div>
           </div>
 
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">Title</label>
+          <div className="space-y-7 lg:col-span-7">
+            <div className="grid gap-7 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label htmlFor="design-title" className="field-label">
+                  Title
+                </label>
                 <input
+                  id="design-title"
                   required
-                  className="w-full bg-gray-50 border-0 rounded-xl p-4 font-semibold text-gray-700 focus:ring-2 focus:ring-[#FFC629] transition-all"
-                  placeholder="e.g. Summer Linen Dress"
+                  placeholder="Sculpted wool coat"
+                  className="field"
                   value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  onChange={(event) => update('title', event.target.value)}
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">Price (₹)</label>
+                <label htmlFor="design-price" className="field-label">
+                  Price (₹)
+                </label>
                 <input
+                  id="design-price"
                   required
                   type="number"
-                  className="w-full bg-gray-50 border-0 rounded-xl p-4 font-semibold text-gray-700 focus:ring-2 focus:ring-[#FFC629] transition-all"
+                  min="0"
                   placeholder="0"
+                  className="field"
                   value={form.price}
-                  onChange={(e) => setForm({ ...form, price: e.target.value })}
+                  onChange={(event) => update('price', event.target.value)}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="design-type" className="field-label">
+                  Type
+                </label>
+                <select
+                  id="design-type"
+                  className="field cursor-pointer"
+                  value={form.type}
+                  onChange={(event) => update('type', event.target.value)}
+                >
+                  <option value="CATALOG">Catalog — made to measure</option>
+                  <option value="CUSTOM">Custom — commission</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="design-category" className="field-label">
+                  Category
+                </label>
+                <input
+                  id="design-category"
+                  placeholder="Womenswear, Outerwear…"
+                  className="field"
+                  value={form.category}
+                  onChange={(event) => update('category', event.target.value)}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="design-material" className="field-label">
+                  Material
+                </label>
+                <input
+                  id="design-material"
+                  placeholder="Italian virgin wool"
+                  className="field"
+                  value={form.material}
+                  onChange={(event) => update('material', event.target.value)}
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">Description</label>
+              <label htmlFor="design-description" className="field-label">
+                Description
+              </label>
               <textarea
-                className="w-full bg-gray-50 border-0 rounded-xl p-4 font-medium text-gray-700 h-32 resize-none focus:ring-2 focus:ring-[#FFC629] transition-all"
-                placeholder="Describe the style, fit, and inspiration..."
+                id="design-description"
+                rows={5}
+                placeholder="Describe the cut, the cloth, and how it should feel to wear."
+                className="field-area"
                 value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                onChange={(event) => update('description', event.target.value)}
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">Material</label>
-                <input
-                  className="w-full bg-gray-50 border-0 rounded-xl p-4 font-medium text-gray-700 focus:ring-2 focus:ring-[#FFC629] transition-all"
-                  placeholder="e.g. 100% Organic Cotton"
-                  value={form.material}
-                  onChange={(e) => setForm({ ...form, material: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">Size Guide / Notes</label>
-                <input
-                  className="w-full bg-gray-50 border-0 rounded-xl p-4 font-medium text-gray-700 focus:ring-2 focus:ring-[#FFC629] transition-all"
-                  placeholder="e.g. True to size, loose fit"
-                  value={form.sizeGuide}
-                  onChange={(e) => setForm({ ...form, sizeGuide: e.target.value })}
-                />
-              </div>
+            <div>
+              <label htmlFor="design-size" className="field-label">
+                Size guide / notes
+              </label>
+              <textarea
+                id="design-size"
+                rows={3}
+                placeholder="Made to measure. 4–6 weeks. Two fittings included."
+                className="field-area"
+                value={form.sizeGuide}
+                onChange={(event) => update('sizeGuide', event.target.value)}
+              />
             </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-4 rounded-2xl bg-[#FFC629] text-black font-black text-lg shadow-lg shadow-yellow-400/30 hover:bg-[#E5B225] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Publishing...' : 'Publish Design'}
-          </button>
+            <div className="flex flex-col gap-3 border-t border-line pt-6 sm:flex-row">
+              <button type="button" onClick={() => navigate('/dashboard')} className="btn-outline flex-1">
+                Cancel
+              </button>
+              <button type="submit" disabled={loading} className="btn-yellow flex-1">
+                {loading ? 'Publishing…' : 'Publish design'}
+              </button>
+            </div>
+
+            {DEMO_MODE && (
+              <p className="text-[10px] leading-relaxed text-ink/35">
+                Demo mode: publishing is simulated and does not write to the database.
+              </p>
+            )}
+          </div>
         </form>
       </div>
     </div>

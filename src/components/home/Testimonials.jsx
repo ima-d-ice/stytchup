@@ -1,46 +1,53 @@
+const TESTIMONIALS = [
+  {
+    quote:
+      'I sent three measurements and a photograph of a coat I had worn for ten years. What came back was the same coat, only better.',
+    name: 'Aarav Mehta',
+    detail: 'Mumbai — made-to-measure coat',
+  },
+  {
+    quote:
+      'The designer asked questions I had never been asked about clothes. The piece fits like it was always mine because, in a way, it was.',
+    name: 'Nina Shah',
+    detail: 'Bengaluru — bespoke silk blouse',
+  },
+];
+
 export default function Testimonials() {
-  const testimonials = [
-    {
-      quote:
-        'StytchUp totally changed how I buy clothes. I bought a custom pattern from a designer in Italy and had it printed on a shirt. It fits my vibe perfectly.',
-      name: 'Sarah Jenkins',
-      title: 'Fashion Enthusiast',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
-    },
-    {
-      quote:
-        'As a freelance illustrator, finding a platform that lets me sell rights to my patterns so easily is a godsend. The community here is vibrant and supportive.',
-      name: 'Marcus Chen',
-      title: 'Graphic Designer',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80',
-    },
-  ];
   return (
-    <section className="py-20 bg-[#FFFBEB]">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-black text-gray-900 sm:text-4xl">The Word on the Street</h2>
+    <section className="section bg-paper">
+      <div className="container-shop">
+        <div className="mb-10 flex items-end justify-between gap-6">
+          <div>
+            <p className="eyebrow mb-3">In their words</p>
+            <h2 className="display text-3xl leading-none tracking-[-0.02em] md:text-5xl">The word</h2>
+          </div>
+          <p className="hidden max-w-[220px] text-right text-[10px] uppercase leading-relaxed tracking-[0.14em] text-ink/35 sm:block">
+            Notes from clients
+            <br />
+            and their ateliers
+          </p>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-2 max-w-5xl mx-auto">
-          {testimonials.map((testimonial, index) => (
-            <div key={index} className="relative p-8 bg-white rounded-3xl shadow-sm border border-yellow-100 hover:shadow-md transition-shadow">
-              <div className="absolute -top-4 -left-4 bg-[#FFC629] text-white w-10 h-10 flex items-center justify-center rounded-full text-2xl font-serif">
-                &rdquo;
-              </div>
-
-              <p className="text-lg text-gray-700 leading-relaxed font-medium mb-8">{testimonial.quote}</p>
-
-              <div className="flex items-center border-t border-gray-100 pt-6">
-                <div className="relative w-14 h-14 mr-4">
-                  <img src={testimonial.avatar} alt={testimonial.name} className="rounded-full object-cover ring-2 ring-gray-100 w-14 h-14" loading="lazy" />
-                </div>
-                <div>
-                  <p className="text-base font-bold text-gray-900">{testimonial.name}</p>
-                  <p className="text-sm text-gray-500 uppercase tracking-wide font-semibold">{testimonial.title}</p>
-                </div>
-              </div>
-            </div>
+        <div className="grid gap-0 border-t border-line md:grid-cols-2">
+          {TESTIMONIALS.map((testimonial, index) => (
+            <figure
+              key={testimonial.name}
+              className={`flex flex-col justify-between py-10 md:py-14 ${
+                index === 0 ? 'border-b border-line md:border-b-0 md:border-r md:pr-12' : 'md:pl-12'
+              }`}
+            >
+              <span className="font-display text-5xl leading-none text-brand" aria-hidden="true">
+                &ldquo;
+              </span>
+              <blockquote className="mt-6 max-w-lg font-display text-2xl leading-snug tracking-[-0.01em] text-ink md:text-3xl">
+                {testimonial.quote}
+              </blockquote>
+              <figcaption className="mt-8 text-[10px] uppercase tracking-[0.18em] text-ink/45">
+                {testimonial.name}
+                <span className="mt-1 block text-ink/30">{testimonial.detail}</span>
+              </figcaption>
+            </figure>
           ))}
         </div>
       </div>

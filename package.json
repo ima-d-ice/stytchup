@@ -6,10 +6,12 @@
   "scripts": {
     "dev": "vite --port 3000",
     "build": "vite build",
-    "lint": "oxlint",
+    "lint": "oxlint src scripts",
     "preview": "vite preview --port 3000",
     "test": "node --test tests/*.test.mjs",
-    "test:ci": "node --test tests/*.test.mjs"
+    "test:ci": "node --test tests/*.test.mjs",
+    "demo:record": "node scripts/record-demo.mjs",
+    "demo:render": "bash scripts/render-demo.sh"
   },
   "dependencies": {
     "@react-oauth/google": "^0.13.5",
@@ -25,6 +27,7 @@
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
     "oxlint": "^1.79.0",
+    "playwright": "^1.64.1",
     "tailwindcss": "^4.3.3",
     "vite": "^8.2.2"
   }

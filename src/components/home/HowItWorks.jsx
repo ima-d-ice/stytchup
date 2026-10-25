@@ -1,36 +1,52 @@
-import { Search, Palette, ShoppingCart } from 'lucide-react';
+const STEPS = [
+  {
+    number: '01',
+    title: 'Discover',
+    description:
+      'Browse a considered edit of pieces from independent designers — or start with a blank page and commission something new.',
+  },
+  {
+    number: '02',
+    title: 'Measure',
+    description:
+      'Order a made-to-measure piece, then share your measurements. Your designer drafts a pattern around them.',
+  },
+  {
+    number: '03',
+    title: 'Receive',
+    description:
+      'The piece is cut, finished, and checked in the atelier before it ships. Made once, for you.',
+  },
+];
 
 export default function HowItWorks() {
-  const steps = [
-    {
-      icon: <Search className="w-8 h-8 text-gray-900" />,
-      title: 'Discover',
-      description: 'Browse a curated feed of patterns and artwork from global designers.',
-    },
-    {
-      icon: <Palette className="w-8 h-8 text-gray-900" />,
-      title: 'Customize',
-      description: 'Apply your favorite design to fabrics, shirts, or home goods.',
-    },
-    {
-      icon: <ShoppingCart className="w-8 h-8 text-gray-900" />,
-      title: 'Own It',
-      description: 'We handle the printing and shipping. You get a unique piece.',
-    },
-  ];
   return (
-    <section className="py-20 bg-white border-b border-gray-100">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-12 md:grid-cols-3">
-          {steps.map((step, index) => (
-            <div key={index} className="text-center px-4">
-              <div className="flex items-center justify-center w-20 h-20 mx-auto bg-[#FFC629] rounded-2xl shadow-[0_4px_14px_rgb(255,198,41,0.4)] mb-6 transform transition hover:scale-110 duration-300">
-                {step.icon}
+    <section id="how-it-works" className="border-y border-line bg-mist">
+      <div className="container-shop py-16 md:py-24">
+        <div className="grid gap-10 lg:grid-cols-12">
+          <div className="lg:col-span-4">
+            <p className="eyebrow mb-3">How it works</p>
+            <h2 className="display text-3xl leading-[0.95] tracking-[-0.02em] md:text-5xl">
+              Slow fashion,
+              <br />
+              made simple.
+            </h2>
+            <p className="mt-5 max-w-xs text-sm leading-relaxed text-ink/50">
+              Three steps between the screen and the atelier. No stock, no sizes, no waste.
+            </p>
+          </div>
+
+          <div className="grid gap-8 sm:grid-cols-3 lg:col-span-8 lg:gap-6">
+            {STEPS.map((step) => (
+              <div key={step.number} className="border-t border-ink pt-5">
+                <p className="font-display text-3xl leading-none text-brand">{step.number}</p>
+                <h3 className="mt-8 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink">
+                  {step.title}
+                </h3>
+                <p className="mt-3 text-[12px] leading-relaxed text-ink/50">{step.description}</p>
               </div>
-              <h3 className="text-xl font-black text-gray-900 mb-3">{step.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{step.description}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </section>

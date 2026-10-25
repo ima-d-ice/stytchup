@@ -12,6 +12,15 @@ dist
 dist-ssr
 *.local
 
+# Local env
+.env
+.env.*
+!.env.example
+
+# Demo recording intermediates (final assets live in docs/)
+docs/demo.webm
+docs/raw/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

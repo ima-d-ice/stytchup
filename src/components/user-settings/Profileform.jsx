@@ -1,51 +1,87 @@
-export default function ProfileForm({ formData, onChange }) {
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">About You</h3>
-        <div className="space-y-4">
-          <InputGroup label="Display Name" name="name" value={formData.name} onChange={onChange} />
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
-            <textarea
-              name="bio"
-              rows={4}
-              value={formData.bio}
-              onChange={onChange}
-              placeholder="Tell us about your style..."
-              className="w-full border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:border-yellow-400 focus:ring-yellow-400 transition-colors bg-gray-50 resize-none outline-none"
-            />
-          </div>
-          <InputGroup label="Skills (Comma separated)" name="skills" value={formData.skills} onChange={onChange} placeholder="Logo Design, 3D Modeling" />
-        </div>
-      </div>
-
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Online Presence</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <InputGroup label="Website" name="website" value={formData.website} onChange={onChange} placeholder="https://" />
-          <InputGroup label="Instagram" name="instagram" value={formData.instagram} onChange={onChange} placeholder="@username" />
-          <div className="sm:col-span-2">
-            <InputGroup label="Behance" name="behance" value={formData.behance} onChange={onChange} placeholder="behance.net/user" />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function InputGroup({ label, name, value, onChange, placeholder }) {
+function Field({ label, name, value, onChange, placeholder, type = 'text' }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label htmlFor={`profile-${name}`} className="field-label">
+        {label}
+      </label>
       <input
-        type="text"
+        id={`profile-${name}`}
+        type={type}
         name={name}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="w-full border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:border-yellow-400 focus:ring-yellow-400 transition-colors bg-gray-50 outline-none"
+        className="field"
       />
+    </div>
+  );
+}
+
+export default function ProfileForm({ formData, onChange }) {
+  return (
+    <div className="space-y-10">
+      <section>
+        <div className="mb-6 flex items-baseline justify-between gap-4">
+          <h2 className="font-display text-2xl leading-none tracking-[-0.01em]">About you</h2>
+          <span className="text-[9px] uppercase tracking-[0.14em] text-ink/30">01</span>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Field label="Display name" name="name" value={formData.name} onChange={onChange} placeholder="Your name" />
+          <Field label="Email" name="email" value={formData.email} onChange={onChange} type="email" placeholder="you@example.com" />
+        </div>
+
+        <div className="mt-6">
+          <label htmlFor="profile-bio" className="field-label">
+            Bio
+          </label>
+          <textarea
+            id="profile-bio"
+            name="bio"
+            rows={4}
+            value={formData.bio}
+            onChange={onChange}
+            placeholder="Tell designers about your style and what you are looking for."
+            className="field-area"
+          />
+        </div>
+
+        <div className="mt-6">
+          <Field
+            label="Skills (comma separated)"
+            name="skills"
+            value={formData.skills}
+            onChange={onChange}
+            placeholder="Couture tailoring, suede, silk"
+          />
+        </div>
+      </section>
+
+      <section className="border-t border-line pt-10">
+        <div className="mb-6 flex items-baseline justify-between gap-4">
+          <h2 className="font-display text-2xl leading-none tracking-[-0.01em]">Online presence</h2>
+          <span className="text-[9px] uppercase tracking-[0.14em] text-ink/30">02</span>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Field label="Website" name="website" value={formData.website} onChange={onChange} placeholder="https://" type="url" />
+          <Field label="Instagram" name="instagram" value={formData.instagram} onChange={onChange} placeholder="@username" />
+          <div className="sm:col-span-2">
+            <Field label="Behance" name="behance" value={formData.behance} onChange={onChange} placeholder="behance.net/username" />
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-line pt-10">
+        <div className="mb-4 flex items-baseline justify-between gap-4">
+          <h2 className="font-display text-2xl leading-none tracking-[-0.01em]">Privacy</h2>
+          <span className="text-[9px] uppercase tracking-[0.14em] text-ink/30">03</span>
+        </div>
+        <p className="max-w-lg text-[11px] leading-relaxed text-ink/40">
+          Your email and measurements are shared only with the designer fulfilling your order. StytchUp never
+          sells client data.
+        </p>
+      </section>
     </div>
   );
 }

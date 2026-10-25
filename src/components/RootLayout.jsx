@@ -1,15 +1,18 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './head/navbar';
 import Footer from './head/footer';
 
 export default function RootLayout() {
+  const location = useLocation();
+  const isChat = /^\/inbox\/[^/]+/.test(location.pathname);
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex min-h-dvh flex-col">
       <Navbar />
-      <main className="flex-1">
+      <main className="flex flex-1 flex-col">
         <Outlet />
       </main>
-      <Footer />
+      {!isChat && <Footer />}
     </div>
   );
 }
